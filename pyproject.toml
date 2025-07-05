@@ -7,7 +7,6 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-streamtools = { git = "ssh://git@github.com/avkoehl/streamtools.git", branch = "main" }
 numba = "^0.61.2"
 geopandas = "^1.1.1"
 rioxarray = "^0.17.0"

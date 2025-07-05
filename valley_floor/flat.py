@@ -1,0 +1,40 @@
+"""
+
+Use slope threshold and channel network to delineate valley floor as being all low slope areas connected to the channel network.
+
+Likely want to preprocess the channel network to remove starts as they can connect to flat hill tops.
+Can do this by thresholding upstream channel length or using a minimum stream order.
+
+Likely want to preprocess the slope raster by smoothing it to remove noise. See `valley_floor.utils.filter_nan_gaussian_conserving`.
+
+inputs:
+    - slope raster (degrees)
+    - channel network (binary raster, 1 for channel, 0 for non-channel)
+    - slope threshold (optional, default 10 degrees)
+
+outputs:
+    - valley floor raster (boolean, 1 for valley floor, 0 for non-valley floor)
+"""
+
+import numpy as np
+from skimage.morphology import isotropic_dilation
+from valley_floor.utils import connected
+
+
+def low_slope_valley_floor(
+    slope,
+    channel_network,
+    slope_threshold=10,
+    dilation_radius=5,  # pixels
+):
+    floor = slope.copy()
+    floor.data = np.zeros_like(slope.data, dtype=bool)
+
+    binary = slope < slope_threshold
+
+    dilated = isotropic_dilation(channel_network.data > 0, radius=dilation_radius)
+    channel_network.data = dilated
+
+    floor = connected(binary, channel_network)
+
+    return floor
