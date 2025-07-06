@@ -17,6 +17,7 @@ scipy = "^1.16.0"
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.4.0"
 matplotlib = "^3.10.3"
+streamtools = { git = "ssh://git@github.com/avkoehl/streamtools.git", branch = "main" }
 
 [build-system]
 requires = ["poetry-core"]
