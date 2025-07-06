@@ -10,6 +10,8 @@ python = "^3.11"
 numba = "^0.61.2"
 geopandas = "^1.1.1"
 rioxarray = "^0.17.0"
+scikit-image = "^0.25.2"
+scipy = "^1.16.0"
 
 
 [tool.poetry.group.dev.dependencies]

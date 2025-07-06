@@ -19,7 +19,7 @@ import numpy as np
 def flood_extent(
     detrended_dem, slope, slope_threshold=10, elevation_threshold=10, subbasin=None
 ):
-    floor = detrended_dem.copy()
+    floor = detrended_dem.copy(deep=True)
     floor.data = np.zeros(detrended_dem.shape, dtype=bool)
     floor.rio.write_nodata(0)
 
@@ -49,7 +49,7 @@ def flood_extent(
             raise ValueError(
                 "If subbasin is None, elevation_threshold must be a single value."
             )
-        sub_mask = (slope <= slope_threshold) & (detrended_dem >= elevation_threshold)
+        sub_mask = (slope <= slope_threshold) & (detrended_dem <= elevation_threshold)
         floor.data = sub_mask
 
     return floor

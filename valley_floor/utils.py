@@ -35,7 +35,7 @@ def filter_nan_gaussian_conserving(arr, spatial_radius, resolution, sigma):
     return gauss
 
 
-def connected(binary_raster, flowpaths_raster):
+def connected(binary, flowpaths):
     """
     Keep only connected components in a binary raster that intersect with flowpaths.
     """

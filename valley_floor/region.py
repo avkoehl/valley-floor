@@ -21,19 +21,20 @@ from skimage.morphology import isotropic_dilation
 from valley_floor.utils import connected
 
 
-def low_slope_valley_floor(
+def low_slope_region(
     slope,
     channel_network,
     slope_threshold=10,
     dilation_radius=5,  # pixels
 ):
-    floor = slope.copy()
+    floor = slope.copy(deep=True)
     floor.data = np.zeros_like(slope.data, dtype=bool)
 
     binary = slope < slope_threshold
 
+    dilated_network = channel_network.copy(deep=True)
     dilated = isotropic_dilation(channel_network.data > 0, radius=dilation_radius)
-    channel_network.data = dilated
+    dilated_network.data = dilated
 
     floor = connected(binary, channel_network)
 
