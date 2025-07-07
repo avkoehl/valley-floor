@@ -1591,7 +1591,7 @@ whitebox-workflows = "^1.3.5"
 type = "git"
 url = "ssh://git@github.com/avkoehl/streamtools.git"
 reference = "main"
-resolved_reference = "f66c6233ee9c5eac2b540c0808124e3802d022b7"
+resolved_reference = "1238e527ace4989f5f30de51202e9aea4c5665bc"
 
 [[package]]
 name = "tifffile"
