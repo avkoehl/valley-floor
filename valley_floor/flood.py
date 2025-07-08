@@ -38,11 +38,13 @@ def flood_extent(
             )
 
         # apply floor delineation for each subbasin
-        for threshold, subbasin_id in elevation_threshold.items():
+        for subbasin_id, threshold in elevation_threshold.items():
             if subbasin_id in subbasin:
                 # apply floor delineation for this subbasin
-                sub_mask = (slope <= slope_threshold) & (detrended_dem >= threshold)
-                floor.data[subbasin == subbasin_id] = sub_mask[subbasin == subbasin_id]
+                sub_mask = (slope <= slope_threshold) & (detrended_dem <= threshold)
+                floor.data[subbasin == subbasin_id] = sub_mask.data[
+                    subbasin == subbasin_id
+                ]
     else:
         # apply floor delineation globally
         if isinstance(elevation_threshold, dict):

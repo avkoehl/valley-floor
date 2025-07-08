@@ -3,6 +3,7 @@ This module provides functions to post-process a floor raster.
 """
 
 from skimage.morphology import remove_small_holes
+import numpy as np
 
 
 def combine_floors(
@@ -33,7 +34,12 @@ def label_by_subbasin(
     floor,
     subbasins,
 ):
-    return (floor > 0) * subbasins
+    # floor is raster with True or False values
+    # subbasins is a raster with integer labels for each subbasin
+    # want labeled to be a raster with subbasin labels where floor is True
+    labels = subbasins.where(floor, other=0)
+    labels.rio.write_nodata(0, inplace=True)
+    return labels
 
 
 def convert_to_polygon(
