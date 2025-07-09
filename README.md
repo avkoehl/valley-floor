@@ -60,7 +60,12 @@ thresholds = determine_flood_threshold(
     default_threshold=10,
 )
 flood = flood_extent(
-    catchment_data["hand"], smoothed_slope, 10, thresholds, catchment_data["subbasins"]
+    catchment_data["hand"], 
+    smoothed_slope, 
+    catchment_data['raster_channels'], 
+    10, 
+    thresholds, 
+    catchment_data["subbasins"]
 )
 
 # COMBINE AND CLEAN

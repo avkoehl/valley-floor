@@ -15,9 +15,16 @@ outputs:
 
 import numpy as np
 
+from postprocess import burnin_streams, remove_isolated_areas
+
 
 def flood_extent(
-    detrended_dem, slope, slope_threshold=10, elevation_threshold=10, subbasin=None
+    detrended_dem,
+    slope,
+    channel_network,
+    slope_threshold=10,
+    elevation_threshold=10,
+    subbasin=None,
 ):
     floor = detrended_dem.copy(deep=True)
     floor.data = np.zeros(detrended_dem.shape, dtype=bool)
@@ -53,6 +60,9 @@ def flood_extent(
             )
         sub_mask = (slope <= slope_threshold) & (detrended_dem <= elevation_threshold)
         floor.data = sub_mask
+
+    floor = burnin_streams(floor, channel_network)
+    floor = remove_isolated_areas(floor, channel_network)
 
     floor.rio.write_nodata(0, inplace=True)
     return floor

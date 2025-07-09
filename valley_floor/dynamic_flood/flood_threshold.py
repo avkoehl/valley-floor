@@ -40,7 +40,11 @@ def determine_flood_threshold(
         if len(subbasin_points) < min_points:
             flood_threshold = default_threshold
         else:
-            flood_threshold = np.percentile(subbasin_points["detrended"], percentile)
+            # remove outliers and NaN values
+            values = subbasin_points["detrended"].values
+            values = values[np.isfinite(values)]
+            values = values[np.abs(values - np.mean(values)) < 3 * np.std(values)]
+            flood_threshold = np.percentile(values, percentile)
             flood_threshold = flood_threshold + buffer
         flood_thresholds[sid] = flood_threshold
 

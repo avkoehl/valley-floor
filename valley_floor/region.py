@@ -18,14 +18,14 @@ outputs:
 
 import numpy as np
 from skimage.morphology import isotropic_dilation
-from valley_floor.utils import connected
+from valley_floor.postprocess import remove_isolated_areas
 
 
 def low_slope_region(
     slope,
     channel_network,
     slope_threshold=10,
-    dilation_radius=5,  # pixels
+    dilation_radius=5.0,  # pixels
 ):
     floor = slope.copy(deep=True)
     floor.data = np.zeros_like(slope.data, dtype=bool)
@@ -36,7 +36,7 @@ def low_slope_region(
     dilated = isotropic_dilation(channel_network.data > 0, radius=dilation_radius)
     dilated_network.data = dilated
 
-    floor = connected(binary, channel_network)
+    floor = remove_isolated_areas(binary, channel_network)
 
     floor.rio.write_nodata(0, inplace=True)
     return floor

@@ -3,7 +3,31 @@ This module provides functions to post-process a floor raster.
 """
 
 from skimage.morphology import remove_small_holes
+from skimage.morphology import label
 import numpy as np
+
+
+def remove_isolated_areas(binary, flowpaths):
+    """
+    Keep only connected components in a binary raster that intersect with flowpaths.
+    """
+    fp = flowpaths > 0
+    combined = fp + binary
+    combined.data[~np.isfinite(binary)] = np.nan
+    combined = combined > 0
+
+    con = label(combined, connectivity=2)
+    con = con.astype(np.float64)
+    con[~np.isfinite(binary)] = np.nan
+
+    values = np.unique(con[flowpaths > 0])
+    values = values[np.isfinite(values)]
+
+    result = flowpaths.copy()
+    result.data = con
+    result = result.where(np.isin(con, values))
+    result = result > 0
+    return result
 
 
 def combine_floors(
@@ -64,6 +88,7 @@ def process_floor(
     floor = combine_floors(flood_extent_floor, low_slope_floor)
 
     floor = burnin_streams(floor, channel_network)
+    floor = remove_isolated_areas(floor, channel_network)
 
     if min_size > 0:
         floor = close_holes(floor, min_size)
