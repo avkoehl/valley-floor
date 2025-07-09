@@ -73,5 +73,7 @@ def process_floor(
 
     # if return_polygon:
     #    floor = convert_to_polygon(floor)
+    #    return floor
 
+    floor.rio.write_nodata(0, inplace=True)
     return floor

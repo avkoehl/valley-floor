@@ -54,4 +54,5 @@ def flood_extent(
         sub_mask = (slope <= slope_threshold) & (detrended_dem <= elevation_threshold)
         floor.data = sub_mask
 
+    floor.rio.write_nodata(0, inplace=True)
     return floor
