@@ -38,7 +38,10 @@ def determine_flood_threshold(
         subbasin_points = wallpoints[wallpoints["subbasin"] == sid]
         values = subbasin_points["detrended"].values
         values = values[np.isfinite(values)]
-        values = values[np.abs(values - np.mean(values)) < 3 * np.std(values)]
+
+        # remove outliers
+        if len(values) >= min_points:
+            values = values[np.abs(values - np.mean(values)) < 3 * np.std(values)]
 
         if len(values) < min_points:
             flood_threshold = default_threshold
