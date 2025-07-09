@@ -41,6 +41,9 @@ def determine_flood_threshold(
 
         # remove outliers
         if len(values) >= min_points:
+            print(f"Processing subbasin {sid} with {len(values)} points.")
+            print(f"Values before outlier removal: {values}")
+            print(f"Mean: {np.mean(values)}, Std Dev: {np.std(values)}")
             values = values[np.abs(values - np.mean(values)) < 3 * np.std(values)]
 
         if len(values) < min_points:
