@@ -15,7 +15,8 @@ outputs:
 
 import numpy as np
 
-from postprocess import burnin_streams, remove_isolated_areas
+from valley_floor.postprocess import burnin_streams
+from valley_floor.postprocess import remove_isolated_areas
 
 
 def flood_extent(
