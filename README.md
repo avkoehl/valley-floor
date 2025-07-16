@@ -50,7 +50,9 @@ profiles = label_wallpoints(
     min_slope=6,
     elevation_threshold=3,
 )
+wallpoints = profiles.loc[profiles["is_wallpoint"]].copy(deep=True)
 thresholds = determine_flood_threshold(
+    wallpoints,
     profiles.loc[profiles["is_wallpoint"]],
     catchment_data["subbasins"],
     catchment_data["hand"],
