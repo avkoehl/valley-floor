@@ -8,7 +8,7 @@ import geopandas as gpd
 from valley_floor.flood import flood_extent
 from valley_floor.region import low_slope_region
 from valley_floor.postprocess import process_floor
-from valley_floor.dynamic_flood.valley_transition import find_wallpoints
+from valley_floor.dynamic_flood.valley_transition import label_wallpoints
 from valley_floor.dynamic_flood.flood_threshold import determine_flood_threshold
 
 
@@ -43,7 +43,7 @@ connect = low_slope_region(
 # RIVER VALLEY FLOOR
 smoothed_dem = gaussian_smooth_raster(dem, spatial_radius=30, sigma=10)
 smoothed_slope = compute_slope(smoothed_dem)
-wallpoints = find_wallpoints(
+profiles = label_wallpoints(
     catchment_data["profiles"],
     smoothed_dem,
     smoothed_slope,
@@ -51,7 +51,7 @@ wallpoints = find_wallpoints(
     elevation_threshold=3,
 )
 thresholds = determine_flood_threshold(
-    wallpoints,
+    profiles.loc[profiles["is_wallpoint"]],
     catchment_data["subbasins"],
     catchment_data["hand"],
     min_points=10,
@@ -60,12 +60,12 @@ thresholds = determine_flood_threshold(
     default_threshold=10,
 )
 flood = flood_extent(
-    catchment_data["hand"], 
-    smoothed_slope, 
-    catchment_data['raster_channels'], 
-    10, 
-    thresholds, 
-    catchment_data["subbasins"]
+    catchment_data["hand"],
+    smoothed_slope,
+    catchment_data["raster_channels"],
+    10,
+    thresholds,
+    catchment_data["subbasins"],
 )
 
 # COMBINE AND CLEAN

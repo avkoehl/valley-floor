@@ -18,15 +18,18 @@ def determine_flood_threshold(
     buffer=0.0,
     default_threshold=10,
 ):
+    x_coords = xr.DataArray(wallpoints["geometry"].x.values)
+    y_coords = xr.DataArray(wallpoints["geometry"].y.values)
+
     wallpoints["subbasin"] = subbasin_raster.sel(
-        x=xr.DataArray(wallpoints["x_coord"]),
-        y=xr.DataArray(wallpoints["y_coord"]),
+        x=x_coords,
+        y=y_coords,
         method="nearest",
     ).values
 
     wallpoints["detrended"] = detrended_elevation_raster.sel(
-        x=xr.DataArray(wallpoints["x_coord"]),
-        y=xr.DataArray(wallpoints["y_coord"]),
+        x=x_coords,
+        y=y_coords,
         method="nearest",
     ).values
 
