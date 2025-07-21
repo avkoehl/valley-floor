@@ -23,8 +23,8 @@ def flood_extent(
     detrended_dem,
     slope,
     channel_network,
-    slope_threshold=10,
-    elevation_threshold=10,
+    slope_threshold=10.0,
+    elevation_threshold=10.0,
     subbasin=None,
 ):
     floor = detrended_dem.copy(deep=True)

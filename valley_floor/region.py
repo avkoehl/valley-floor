@@ -24,8 +24,8 @@ from valley_floor.postprocess import remove_isolated_areas
 def low_slope_region(
     slope,
     channel_network,
-    slope_threshold=10,
-    dilation_radius=5.0,  # pixels
+    slope_threshold=3.0,  # degrees
+    dilation_radius=3.0,  # pixels
 ):
     floor = slope.copy(deep=True)
     floor.data = np.zeros_like(slope.data, dtype=bool)

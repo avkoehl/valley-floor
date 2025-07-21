@@ -82,7 +82,7 @@ def process_floor(
     flood_extent_floor,
     low_slope_floor,
     channel_network,
-    min_size=0,
+    min_size=0.0,
     subbasins=None,
 ):
     floor = combine_floors(flood_extent_floor, low_slope_floor)
