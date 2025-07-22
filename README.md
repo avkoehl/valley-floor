@@ -88,7 +88,7 @@ flood_floor = flood_extent(
     smoothed_slope,
     channel_network,
     10,
-    thresholds,
+    10,
     subbasins
 )
 
