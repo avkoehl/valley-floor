@@ -1,6 +1,5 @@
 # Project Directory Structure
 configs/
-data/
 outputs/
 working_dir/
 *.pdf

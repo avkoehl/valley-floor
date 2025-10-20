@@ -12,8 +12,8 @@ from valley_floor.config import Config
 def delineate_valley_floor(
     dem,
     channel_network,
-    nhd_vector=False,
     config: Config = Config(),
+    nhd_vector=False,
 ):
     # preprocess
     if nhd_vector and isinstance(channel_network, gdf.GeoDataFrame):
