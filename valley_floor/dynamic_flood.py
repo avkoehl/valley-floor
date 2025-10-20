@@ -1,16 +1,90 @@
 """
-Analyze cross sections centered on river segments to identify the transition points where valley floor meets steep sustained slopes indicating valley wall boundary. Steep slopes are defined by a minimum elevation gain over a continuous segment of steep slope. Continuous segments are defined by sequential points with slope greater than a specified minimum slope.
+Determine flood threshold for each stream segment based on wall points and detrended elevation data.
+Output is a dictionary with stream segment IDs as keys and their respective flood thresholds as values.
+To be used as an input in `valley_floor.flood`.
 
-
-`find_wallpoints` is a helper function that encapsulates the whole workflow - converts cross section linestrings into profiles and then processes each profile to find the transition points.
-See `streamtools.profile` for details on how profiles are generated from cross section linestrings.
 """
 
 import xarray as xr
 import numpy as np
 
 
-def label_wallpoints(
+def dynamic_flood_thresholds(
+    xscoords,
+    dem,
+    slope,
+    hand,
+    subbasins,
+    min_slope=10.0,
+    elevation_threshold=10.0,
+    min_points=10,
+    percentile=80,
+    buffer=0.0,
+    default_threshold=10,
+):
+    labeled_xsections = _label_wallpoints(
+        xscoords, dem, slope, min_slope, elevation_threshold
+    )
+    thresholds = _determine_flood_threshold(
+        labeled_xsections[labeled_xsections["is_wallpoint"]],
+        subbasins,
+        hand,
+        min_points,
+        percentile,
+        buffer,
+        default_threshold,
+    )
+    return thresholds
+
+
+def _determine_flood_threshold(
+    wallpoints,
+    subbasin_raster,
+    detrended_elevation_raster,
+    min_points,
+    percentile,
+    buffer,
+    default_threshold,
+):
+    x_coords = xr.DataArray(wallpoints["geometry"].x.values)
+    y_coords = xr.DataArray(wallpoints["geometry"].y.values)
+
+    wallpoints["subbasin"] = subbasin_raster.sel(
+        x=x_coords,
+        y=y_coords,
+        method="nearest",
+    ).values
+
+    wallpoints["detrended"] = detrended_elevation_raster.sel(
+        x=x_coords,
+        y=y_coords,
+        method="nearest",
+    ).values
+
+    unique_subbasins = np.unique(subbasin_raster.data)
+    unique_subbasins = unique_subbasins[np.isfinite(unique_subbasins)]
+
+    flood_thresholds = {}
+    for sid in unique_subbasins:
+        subbasin_points = wallpoints[wallpoints["subbasin"] == sid]
+        values = subbasin_points["detrended"].values
+        values = values[np.isfinite(values)]
+
+        # remove outliers
+        if len(values) >= min_points:
+            values = values[np.abs(values - np.mean(values)) < 3 * np.std(values)]
+
+        if len(values) < min_points:
+            flood_threshold = default_threshold
+        else:
+            flood_threshold = np.percentile(values, percentile)
+            flood_threshold = flood_threshold + buffer
+        flood_thresholds[sid] = flood_threshold
+
+    return flood_thresholds
+
+
+def _label_wallpoints(
     xs_coords,
     elevation_raster,
     slope_raster,

@@ -14,6 +14,7 @@ scikit-image = "^0.25.2"
 scipy = "^1.16.0"
 xarray = "^2025.7.0"
 streamkit = { git = "ssh://git@github.com/avkoehl/streamkit.git", branch = "main" }
+xarray-spatial = "^0.4.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^9.4.0"

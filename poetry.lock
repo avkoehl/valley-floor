@@ -815,6 +815,26 @@ files = [
 markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win32\""}
 
 [[package]]
+name = "colorcet"
+version = "3.1.0"
+description = "Collection of perceptually uniform colormaps"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "colorcet-3.1.0-py3-none-any.whl", hash = "sha256:2a7d59cc8d0f7938eeedd08aad3152b5319b4ba3bcb7a612398cc17a384cb296"},
+    {file = "colorcet-3.1.0.tar.gz", hash = "sha256:2921b3cd81a2288aaf2d63dbc0ce3c26dcd882e8c389cc505d6886bf7aa9a4eb"},
+]
+
+[package.extras]
+all = ["colorcet[doc]", "colorcet[examples]", "colorcet[tests-extra]", "colorcet[tests]"]
+doc = ["colorcet[examples]", "nbsite (>=0.8.4)", "sphinx-copybutton"]
+examples = ["bokeh", "holoviews", "matplotlib", "numpy"]
+tests = ["packaging", "pre-commit", "pytest (>=2.8.5)", "pytest-cov"]
+tests-examples = ["colorcet[examples]", "nbval"]
+tests-extra = ["colorcet[tests]", "pytest-mpl"]
+
+[[package]]
 name = "contourpy"
 version = "1.3.3"
 description = "Python library for calculating contours of 2D quadrilateral grids"
@@ -1111,6 +1131,35 @@ toolz = ">=0.8.0"
 [package.extras]
 cython = ["cython (>=0.29)"]
 test = ["pytest"]
+
+[[package]]
+name = "datashader"
+version = "0.18.2"
+description = "Data visualization toolchain based on aggregating into a grid"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "datashader-0.18.2-py3-none-any.whl", hash = "sha256:2aa90e867a46b1e75248f32a47c5b14bb5dc869524152f88c0af8369d47359e7"},
+    {file = "datashader-0.18.2.tar.gz", hash = "sha256:53ef0bc35b9ba1034bdf290a2e28babf0fa2b075a3e5a822c79dcde12183d1ff"},
+]
+
+[package.dependencies]
+colorcet = "*"
+multipledispatch = "*"
+numba = "*"
+numpy = "*"
+packaging = "*"
+pandas = "*"
+param = "*"
+pyct = "*"
+requests = "*"
+scipy = "*"
+toolz = "*"
+xarray = "*"
+
+[package.extras]
+tests = ["pytest"]
 
 [[package]]
 name = "decorator"
@@ -2450,6 +2499,18 @@ files = [
 ]
 
 [[package]]
+name = "multipledispatch"
+version = "1.0.0"
+description = "Multiple dispatch"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "multipledispatch-1.0.0-py3-none-any.whl", hash = "sha256:0c53cd8b077546da4e48869f49b13164bebafd0c2a5afceb6bb6a316e7fb46e4"},
+    {file = "multipledispatch-1.0.0.tar.gz", hash = "sha256:5c839915465c68206c3e9c473357908216c28383b425361e5d144594bf85a7e0"},
+]
+
+[[package]]
 name = "netcdf4"
 version = "1.7.3"
 description = "Provides an object-oriented python interface to the netCDF version 4 library"
@@ -2837,6 +2898,26 @@ spss = ["pyreadstat (>=1.2.0)"]
 sql-other = ["SQLAlchemy (>=2.0.0)", "adbc-driver-postgresql (>=0.8.0)", "adbc-driver-sqlite (>=0.8.0)"]
 test = ["hypothesis (>=6.46.1)", "pytest (>=7.3.2)", "pytest-xdist (>=2.2.0)"]
 xml = ["lxml (>=4.9.2)"]
+
+[[package]]
+name = "param"
+version = "2.2.1"
+description = "Make your Python code clearer and more reliable by declaring Parameters."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "param-2.2.1-py3-none-any.whl", hash = "sha256:e3a4ca7f3d7610615129a55dbde2e90eb67d11cef70936487b0a59717dba0bdc"},
+    {file = "param-2.2.1.tar.gz", hash = "sha256:ba1f7cec6455ea8ad96f641f4082759bf1057dcbe629aa79d956b25973252422"},
+]
+
+[package.extras]
+all = ["aiohttp", "cloudpickle", "gmpy", "ipython", "jsonschema", "nbval", "nest-asyncio", "numpy", "odfpy", "openpyxl", "pandas", "panel", "pyarrow", "pytest", "pytest-asyncio", "pytest-xdist", "tables", "xlrd"]
+examples = ["aiohttp", "pandas", "panel"]
+tests = ["pytest", "pytest-asyncio"]
+tests-deser = ["odfpy", "openpyxl", "pyarrow", "tables", "xlrd"]
+tests-examples = ["aiohttp", "nbval", "pandas", "panel", "pytest", "pytest-asyncio", "pytest-xdist"]
+tests-full = ["aiohttp", "cloudpickle", "gmpy", "ipython", "jsonschema", "nbval", "nest-asyncio", "numpy", "odfpy", "openpyxl", "pandas", "panel", "pyarrow", "pytest", "pytest-asyncio", "pytest-xdist", "tables", "xlrd"]
 
 [[package]]
 name = "parso"
@@ -3388,6 +3469,25 @@ files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
 ]
+
+[[package]]
+name = "pyct"
+version = "0.6.0"
+description = "Python package common tasks for users (e.g. copy examples, fetch data, ...)"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "pyct-0.6.0-py3-none-any.whl", hash = "sha256:cfaded7289fca72ddf6579b81459e3ec8db323a508e61c49aa318ee3cd6ff160"},
+    {file = "pyct-0.6.0.tar.gz", hash = "sha256:d4e513b2cf35b6165605ae5fce5f2a49985bc67473c579de85134b8c71d374a8"},
+]
+
+[package.dependencies]
+param = ">=1.7.0"
+
+[package.extras]
+cmd = ["pyyaml", "requests"]
+tests = ["pytest"]
 
 [[package]]
 name = "pygeohydro"
@@ -4545,6 +4645,29 @@ types = ["pandas-stubs", "scipy-stubs", "types-PyYAML", "types-Pygments", "types
 viz = ["cartopy (>=0.23)", "matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
+name = "xarray-spatial"
+version = "0.4.0"
+description = "xarray-based spatial analysis tools"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "xarray_spatial-0.4.0-py3-none-any.whl", hash = "sha256:6c207c90142f3fbba142e67bfd7f69767246aba6146aca9e130581b35799c9df"},
+    {file = "xarray_spatial-0.4.0.tar.gz", hash = "sha256:cc2da7630acc49b1fefbeb3f4509c15d6eea93d12938ee8f617395a70a6a2da2"},
+]
+
+[package.dependencies]
+datashader = ">=0.15.0"
+numba = "*"
+numpy = "*"
+xarray = "*"
+
+[package.extras]
+doc = ["Jinja2 (>=2.11)", "dask[dataframe]", "geopandas", "ipykernel", "matplotlib", "nbsphinx", "numpydoc", "pandoc", "pydata-sphinx-theme", "sphinx", "sphinx-panels", "sphinx-rtd-theme"]
+optional = ["awkward (>=1.4)", "geopandas", "rtxpy", "shapely", "spatialpandas"]
+tests = ["flake8", "isort", "noise (>=1.2.2)", "pytest", "pytest-cov"]
+
+[[package]]
 name = "yarl"
 version = "1.22.0"
 description = "Yet another URL library"
@@ -4692,4 +4815,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "7e7f99e4fd8d6682e55c6bd09cf66862177d89a420a4986ec77927b6f1451998"
+content-hash = "7dc55569b1d9cad7bc17a3a177ac1e838a754ecdc2be9113ccc8834686d5fa70"
