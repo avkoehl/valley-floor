@@ -13,12 +13,14 @@ def delineate_valley_floor(
     dem,
     channel_network,
     config: Config = Config(),
-    nhd_vector=False,
 ):
-    # preprocess
-    if nhd_vector and isinstance(channel_network, gdf.GeoDataFrame):
-        channel_network = rasterize_nhd(channel_network, dem)
+    if isinstance(channel_network, gdf.GeoDataFrame):
+        channel_network = rasterize_nhd(
+            channel_network,
+            dem,
+        )
 
+    # preprocess
     region_inputs = prepare_region_inputs(
         dem,
         channel_network,
