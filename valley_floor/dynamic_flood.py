@@ -25,8 +25,9 @@ def dynamic_flood_thresholds(
     labeled_xsections = _label_wallpoints(
         xscoords, dem, slope, min_slope, elevation_threshold
     )
+    wallpoints = labeled_xsections[labeled_xsections["is_wallpoint"]].copy()
     thresholds = _determine_flood_threshold(
-        labeled_xsections[labeled_xsections["is_wallpoint"]],
+        wallpoints,
         subbasins,
         hand,
         min_points,
