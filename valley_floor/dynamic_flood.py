@@ -21,6 +21,7 @@ def dynamic_flood_thresholds(
     percentile=80,
     buffer=0.0,
     default_threshold=10,
+    return_wallpoints=False,
 ):
     labeled_xsections = _label_wallpoints(
         xscoords, dem, slope, min_slope, elevation_threshold
@@ -35,6 +36,8 @@ def dynamic_flood_thresholds(
         buffer,
         default_threshold,
     )
+    if return_wallpoints:
+        return thresholds, wallpoints
     return thresholds
 
 

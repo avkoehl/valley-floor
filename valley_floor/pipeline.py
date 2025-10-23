@@ -13,6 +13,7 @@ def delineate_valley_floor(
     dem,
     channel_network,
     config: Config = Config(),
+    debug_returns: bool = False,
 ):
     if isinstance(channel_network, gdf.GeoDataFrame):
         channel_network = rasterize_nhd(
@@ -40,12 +41,13 @@ def delineate_valley_floor(
     )
 
     if config.flood_delineation.get("dynamic"):
-        thresholds = dynamic_flood_thresholds(
+        thresholds, wallpoints = dynamic_flood_thresholds(
             flood_inputs["cross_section_coords"],
             flood_inputs["smoothed_dem"],
             flood_inputs["smoothed_slope"],
             flood_inputs["hand"],
             flood_inputs["subbasins"],
+            return_wallpoints=True,
             **config.thresholds,
         )
     else:
@@ -68,4 +70,15 @@ def delineate_valley_floor(
         min_size=config.postprocess["min_size"],
         subbasins=flood_inputs["subbasins"],
     )
+
+    if debug_returns:
+        return {
+            "region_floor": region_floor,
+            "flood_floor": flood_floor,
+            "processed_floor": processed_floor,
+            "wallpoints": wallpoints
+            if config.flood_delineation.get("dynamic")
+            else None,
+            "thresholds": thresholds,
+        }
     return processed_floor

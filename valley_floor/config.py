@@ -16,7 +16,7 @@ class Config:
         "smooth_window": 5,
         "threshold_degrees": 1,
         "interval_distance": 100,
-        "width": 1000,
+        "width": 2000,
         "smoothed": True,
         "point_spacing": 10,
     }
