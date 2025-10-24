@@ -72,13 +72,15 @@ def delineate_valley_floor(
     )
 
     if debug_returns:
-        return {
+        result = {
             "region_floor": region_floor,
             "flood_floor": flood_floor,
             "processed_floor": processed_floor,
-            "wallpoints": wallpoints
-            if config.flood_delineation.get("dynamic")
-            else None,
-            "thresholds": thresholds,
+            **region_inputs,
+            **flood_inputs,
         }
+        if config.flood_delineation.get("dynamic"):
+            result["dynamic_thresholds"] = thresholds
+            result["wallpoints"] = wallpoints
+        return result
     return processed_floor
