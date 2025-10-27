@@ -61,7 +61,7 @@ def prepare_flood_inputs(
         vector_streams.geometry, interval_distance, width, smoothed=smoothed
     )
     xscoords = sample_cross_sections(xsections, point_spacing)
-    hand = compute_hand(dem, channel_network, flow_dir)
+    hand = compute_hand(dem, flow_dir, channel_network)
     subbasins = delineate_subbasins(reaches, flow_dir, flow_acc)
     smoothed_dem = gaussian_smooth_raster(dem, smooth_radius, smooth_sigma)
     smoothed_slope = calculate_slope(smoothed_dem)
