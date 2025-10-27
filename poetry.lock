@@ -4505,7 +4505,7 @@ whitebox = ">=2.3.6,<3.0.0"
 type = "git"
 url = "ssh://git@github.com/avkoehl/streamkit.git"
 reference = "main"
-resolved_reference = "6c728fd4ed40fdfe6d6e2676e9772f23d840062c"
+resolved_reference = "44b70ebe9e6b8c6f26e89e05418c4c1a259b0b05"
 
 [[package]]
 name = "tifffile"
