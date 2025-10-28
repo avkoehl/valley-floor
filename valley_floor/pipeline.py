@@ -16,7 +16,7 @@ def delineate_valley_floor(
     config: Config = Config(),
     debug_returns: bool = False,
 ):
-    _, flow_dir, flow_acc = flow_accumulation_workflow(dem)
+    cdem, flow_dir, flow_acc = flow_accumulation_workflow(dem)
     if isinstance(channel_network, gdf.GeoDataFrame):
         channel_network = rasterize_nhd(
             channel_network,
@@ -32,6 +32,7 @@ def delineate_valley_floor(
     )
     flood_inputs = prepare_flood_inputs(
         dem,
+        cdem,
         channel_network,
         flow_dir,
         flow_acc,

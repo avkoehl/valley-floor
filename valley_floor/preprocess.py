@@ -6,7 +6,7 @@ from streamkit import (
     delineate_subbasins,
     network_cross_sections,
     sample_cross_sections,
-    compute_hand,
+    compute_hand_wbt,
 )
 
 from xrspatial import slope as calculate_slope
@@ -33,6 +33,7 @@ def prepare_region_inputs(
 
 def prepare_flood_inputs(
     dem,
+    conditioned_dem,
     channel_network,
     flow_dir,
     flow_acc,
@@ -63,7 +64,7 @@ def prepare_flood_inputs(
         vector_streams.geometry, interval_distance, width, smoothed=smoothed
     )
     xscoords = sample_cross_sections(xsections, point_spacing)
-    hand = compute_hand(dem, flow_dir, channel_network)
+    hand = compute_hand_wbt(conditioned_dem, channel_network)
     subbasins = delineate_subbasins(reaches, flow_dir, flow_acc)
     smoothed_dem = gaussian_smooth_raster(dem, smooth_radius, smooth_sigma)
     smoothed_slope = calculate_slope(smoothed_dem)
