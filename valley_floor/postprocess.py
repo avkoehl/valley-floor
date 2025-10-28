@@ -61,7 +61,14 @@ def label_by_subbasin(
     # floor is raster with True or False values
     # subbasins is a raster with integer labels for each subbasin
     # want labeled to be a raster with subbasin labels where floor is True
-    labels = subbasins.where(floor, other=0)
+    # though there are some 'floors' that don't intersect with any subbasin, they should be labeled with the max subbasin + 1
+    labels = floor.copy(data=np.zeros_like(floor.data))
+    floor_mask = floor.data > 0
+    labels.data[floor_mask] = subbasins.data[floor_mask]
+
+    orphaned = floor_mask & (labels.data == 0)
+    max_label = np.nanmax(subbasins.data) + 1
+    labels.data[orphaned] = max_label
     labels.rio.write_nodata(0, inplace=True)
     return labels
 
