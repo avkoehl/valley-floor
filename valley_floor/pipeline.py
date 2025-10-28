@@ -1,5 +1,6 @@
 import geopandas as gdf
 from streamkit import rasterize_nhd
+from streamkit.watershed import flow_accumulation_workflow
 
 from valley_floor.flood import flood_extent
 from valley_floor.region import low_slope_region
@@ -15,21 +16,25 @@ def delineate_valley_floor(
     config: Config = Config(),
     debug_returns: bool = False,
 ):
+    _, flow_dir, flow_acc = flow_accumulation_workflow(dem)
     if isinstance(channel_network, gdf.GeoDataFrame):
         channel_network = rasterize_nhd(
             channel_network,
-            dem,
+            flow_dir,
         )
 
     # preprocess
     region_inputs = prepare_region_inputs(
         dem,
         channel_network,
+        flow_dir,
         **config.preprocess_region,
     )
     flood_inputs = prepare_flood_inputs(
         dem,
         channel_network,
+        flow_dir,
+        flow_acc,
         **config.preprocess_flood,
     )
 
