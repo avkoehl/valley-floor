@@ -1,4 +1,8 @@
-from streamkit import flow_accumulation_workflow, trace_streams, link_streams
+from streamkit import (
+    flow_accumulation_workflow,
+    trace_streams,
+    link_streams,
+)
 
 from valley_floor.flood import flood_extent
 from valley_floor.region import low_slope_region
@@ -81,14 +85,23 @@ def delineate_valley_floor(
     )
 
     if debug_returns:
+        from streamkit import vectorize_streams
+
+        vec_reaches = vectorize_streams(flood_inputs["reaches"], flow_dir, flow_acc)
         result = {
             "region_floor": region_floor,
             "flood_floor": flood_floor,
             "processed_floor": processed_floor,
+            "vector_reaches": vec_reaches,
             **region_inputs,
             **flood_inputs,
         }
         if config.flood_delineation.get("dynamic"):
+            thresholds = {str(k): v for k, v in thresholds.items()}
+            vec_reaches["hand_threshold"] = (
+                vec_reaches["stream_id"].astype(str).map(thresholds)
+            )
+            result["vector_reaches"] = vec_reaches
             result["dynamic_thresholds"] = thresholds
             result["wallpoints"] = wallpoints
         return result
