@@ -1,6 +1,4 @@
-import geopandas as gdf
-from streamkit import rasterize_nhd
-from streamkit.watershed import flow_accumulation_workflow
+from streamkit import flow_accumulation_workflow, trace_streams, link_streams
 
 from valley_floor.flood import flood_extent
 from valley_floor.region import low_slope_region
@@ -12,16 +10,21 @@ from valley_floor.config import Config
 
 def delineate_valley_floor(
     dem,
-    channel_network,
+    channel_heads,
     config: Config = Config(),
     debug_returns: bool = False,
 ):
+    if dem.rio.crs != channel_heads.rio.crs:
+        raise ValueError("DEM and channel heads must have the same CRS.")
+    if channel_heads.sum() == 0:
+        raise ValueError("No channel heads found in the provided raster.")
+    valid_channel_heads = channel_heads.where(dem.notnull() & (channel_heads > 0))
+    if valid_channel_heads.sum() == 0:
+        raise ValueError("Channel heads do not intersect the DEM extent.")
+
     cdem, flow_dir, flow_acc = flow_accumulation_workflow(dem)
-    if isinstance(channel_network, gdf.GeoDataFrame):
-        channel_network = rasterize_nhd(
-            channel_network,
-            flow_dir,
-        )
+    streams = trace_streams(channel_heads, flow_dir)
+    channel_network = link_streams(streams, flow_dir)
 
     # preprocess
     region_inputs = prepare_region_inputs(
