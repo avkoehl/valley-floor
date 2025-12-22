@@ -1,30 +1,48 @@
-from streamkit import (
+from streamkit.terrain import (
     gaussian_smooth_raster,
-    upstream_length_raster,
-    vectorize_streams,
+    compute_hand_wbt,
+)
+from streamkit.extraction import (
     delineate_reaches,
     delineate_subbasins,
+)
+from streamkit.network import (
+    assign_strahler_order,
+    vectorize_streams,
     network_cross_sections,
     sample_cross_sections,
-    compute_hand_wbt,
+    stream_segment_slope,
 )
 
 from xrspatial import slope as calculate_slope
+
+
+def prune_headwaters(channel_network, flow_dir, flow_acc, dem, slope_threshold):
+    # remove first order streams and segments with slope above threshold
+    segment_slope = stream_segment_slope(
+        channel_network, flow_dir, flow_acc, dem, return_dict=False
+    )
+    strahler = assign_strahler_order(channel_network, flow_dir, flow_acc)
+
+    mask = (strahler >= 2) & (segment_slope <= slope_threshold)
+    pruned_channels = channel_network.where(mask, 0)
+    return pruned_channels
 
 
 def prepare_region_inputs(
     dem,
     channel_network,
     flow_dir,
+    flow_acc,
     smooth_radius=90,
     smooth_sigma=30,
-    upstream_length_threshold=1000,
+    slope_threshold=5.0,
 ):
     coarse_dem = gaussian_smooth_raster(dem, smooth_radius, smooth_sigma)
     slope = calculate_slope(coarse_dem)
-    upstream_length = upstream_length_raster(channel_network, flow_dir)
-    mask = upstream_length >= upstream_length_threshold
-    trimmed_channels = channel_network.where(mask, 0)
+    trimmed_channels = prune_headwaters(
+        channel_network, flow_dir, flow_acc, dem, slope_threshold
+    )
     return {
         "smoothed_slope": slope,
         "trimmed_channels": trimmed_channels,

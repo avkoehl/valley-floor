@@ -13,12 +13,10 @@ def remove_isolated_areas(binary, flowpaths):
     """
     fp = flowpaths > 0
     combined = fp + binary
-    combined.data[~np.isfinite(binary)] = np.nan
     combined = combined > 0
 
     con = label(combined, connectivity=2)
     con = con.astype(np.float64)
-    con[~np.isfinite(binary)] = np.nan
 
     values = np.unique(con[flowpaths > 0])
     values = values[np.isfinite(values)]
@@ -69,20 +67,7 @@ def label_by_subbasin(
     orphaned = floor_mask & (labels.data == 0)
     max_label = np.nanmax(subbasins.data) + 1
     labels.data[orphaned] = max_label
-    labels.rio.write_nodata(0, inplace=True)
     return labels
-
-
-def convert_to_polygon(
-    floor,
-):
-    # TODO
-    pass
-
-
-def remove_boundary_slopes(floor, slope_threshold):
-    # TODO
-    pass
 
 
 def process_floor(
@@ -103,9 +88,6 @@ def process_floor(
     if subbasins is not None:
         floor = label_by_subbasin(floor, subbasins)
 
-    # if return_polygon:
-    #    floor = convert_to_polygon(floor)
-    #    return floor
-
-    floor.rio.write_nodata(0, inplace=True)
+    floor = floor > 0
+    floor = floor.astype(np.uint8)
     return floor

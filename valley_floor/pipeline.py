@@ -1,8 +1,5 @@
-from streamkit import (
-    flow_accumulation_workflow,
-    trace_streams,
-    link_streams,
-)
+from streamkit.terrain import flow_accumulation_workflow
+from streamkit.extraction import extract_channel_network
 
 from valley_floor.flood import flood_extent
 from valley_floor.region import low_slope_region
@@ -27,14 +24,14 @@ def delineate_valley_floor(
         raise ValueError("Channel heads do not intersect the DEM extent.")
 
     cdem, flow_dir, flow_acc = flow_accumulation_workflow(dem)
-    streams = trace_streams(channel_heads, flow_dir)
-    channel_network = link_streams(streams, flow_dir)
+    channel_network = extract_channel_network(channel_heads, flow_dir)
 
     # preprocess
     region_inputs = prepare_region_inputs(
         dem,
         channel_network,
         flow_dir,
+        flow_acc,
         **config.preprocess_region,
     )
     flood_inputs = prepare_flood_inputs(
@@ -85,14 +82,18 @@ def delineate_valley_floor(
     )
 
     if debug_returns:
-        from streamkit import vectorize_streams
+        from streamkit.network import vectorize_streams
 
         vec_reaches = vectorize_streams(flood_inputs["reaches"], flow_dir, flow_acc)
+        vec_trimmed = vectorize_streams(
+            region_inputs["trimmed_channels"], flow_dir, flow_acc
+        )
         result = {
             "region_floor": region_floor,
             "flood_floor": flood_floor,
             "processed_floor": processed_floor,
             "vector_reaches": vec_reaches,
+            "trimmed_reaches": vec_trimmed,
             **region_inputs,
             **flood_inputs,
         }

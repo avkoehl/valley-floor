@@ -38,5 +38,5 @@ def low_slope_region(
 
     floor = remove_isolated_areas(binary, channel_network)
 
-    floor.rio.write_nodata(0, inplace=True)
+    floor = floor.astype(np.uint8)
     return floor

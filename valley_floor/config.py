@@ -16,7 +16,7 @@ class Config:
             self.preprocess_region = {
                 "smooth_radius": 90,
                 "smooth_sigma": 30,
-                "upstream_length_threshold": 1000,
+                "slope_threshold": 5.0,
             }
         if self.preprocess_flood is None:
             self.preprocess_flood = {

@@ -64,6 +64,5 @@ def flood_extent(
 
     floor = burnin_streams(floor, channel_network)
     floor = remove_isolated_areas(floor, channel_network)
-
-    floor.rio.write_nodata(0, inplace=True)
+    floor = floor.astype(np.uint8)
     return floor
