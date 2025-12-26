@@ -18,25 +18,41 @@ outputs:
 
 import numpy as np
 from skimage.morphology import isotropic_dilation
+from streamkit.terrain import gaussian_smooth_raster
+from xrspatial import slope as compute_slope
+import xarray as xr
+
 from valley_floor.postprocess import remove_isolated_areas
+from valley_floor.config import RegionParameters
 
 
-def low_slope_region(
-    slope,
-    channel_network,
-    slope_threshold=3.0,  # degrees
-    dilation_radius=3.0,  # pixels
-):
+def grow_region(
+    elevation: xr.DataArray,
+    channel_network: xr.DataArray,
+    region_params: RegionParameters,
+) -> xr.DataArray:
+    smoothed = gaussian_smooth_raster(
+        elevation,
+        spatial_radius=region_params.smooth_radius,
+        sigma=region_params.smooth_sigma,
+    )
+    slope = compute_slope(smoothed)
+
     floor = slope.copy(deep=True)
     floor.data = np.zeros_like(slope.data, dtype=bool)
 
-    binary = slope < slope_threshold
+    binary = slope < region_params.slope_threshold
 
     dilated_network = channel_network.copy(deep=True)
-    dilated = isotropic_dilation(channel_network.data > 0, radius=dilation_radius)
+    dilated = isotropic_dilation(
+        channel_network.data > 0, radius=region_params.dilation_radius
+    )
     dilated_network.data = dilated
 
     floor = remove_isolated_areas(binary, channel_network)
 
     floor = floor.astype(np.uint8)
+    floor = floor.rio.set_nodata(255)
+    floor = floor.rio.write_nodata(255)
+    floor.data[np.isnan(elevation.data)] = 255
     return floor

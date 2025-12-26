@@ -11,48 +11,35 @@ def flood_reaches(
     detrended_dem,
     subbasins,
     xs_params,
-    transition_params,
+    slope_break_params,
     threshold_params,
 ):
     xs_coords = generate_cross_sections(
         network_gdf,
         elevation,
-        xs_params["interval_distance"],
-        xs_params["length"],
-        xs_params["point_spacing"],
+        xs_params.interval_distance,
+        xs_params.length,
+        xs_params.point_spacing,
     )
     slope_break_pts = detect_slope_breaks(
         xs_coords,
-        transition_params["steep_slope"],
-        transition_params["min_elevation_gain"],
+        slope_break_params.steep_slope,
+        slope_break_params.min_elevation_gain,
     )
-    reach_thresholds = derive_reach_thresholds(
+    reach_thresholds, slope_break_pts = derive_reach_thresholds(
         slope_break_pts,
         detrended_dem,
         subbasins,
-        threshold_params["default_elevation"],
-        threshold_params["percentile"],
+        threshold_params.default_elevation,
+        threshold_params.percentile,
+        threshold_params.min_points,
     )
     flooded_reaches = apply_flooding(detrended_dem, reach_thresholds, subbasins)
-    return {
-        "flooded_reaches": flooded_reaches,
-        "slope_break_pts": slope_break_pts,
-        "reach_thresholds": reach_thresholds,
-    }
+    return flooded_reaches, slope_break_pts, reach_thresholds
 
 
 def apply_flooding(detrended_dem, elevation_thresholds, subbasins):
-    floor = detrended_dem.copy(data=np.zeros_like(detrended_dem.data), dtype=np.uint8)
-
-    subbasin_ids = np.unique(subbasins.data)
-    subbasin_ids = subbasin_ids[np.isfinite(subbasin_ids)]
-    # confirm each subbasin_id has a corresponding threshold on elevation_threshold dict
-    keys_set = set(elevation_thresholds.keys())
-    for subbasin_id in subbasin_ids:
-        if subbasin_id not in keys_set:
-            raise ValueError(
-                f"Missing elevation threshold for subbasin ID {subbasin_id}"
-            )
+    floor = detrended_dem.copy(data=np.zeros_like(detrended_dem.data, dtype=np.uint8))
 
     for subbasin_id, threshold in elevation_thresholds.items():
         sub_mask = subbasins == subbasin_id
@@ -62,7 +49,7 @@ def apply_flooding(detrended_dem, elevation_thresholds, subbasins):
     # where dem is nan, set floor to 255
     floor.data[np.isnan(detrended_dem.data)] = 255
     floor = floor.rio.set_nodata(255)
-    floor = floor.rio.write_nodata(255)
+    floor = floor.rio.write_nodata(255, encoded=True)
     floor.attrs["_FillValue"] = 255
 
     return floor
@@ -80,7 +67,7 @@ def generate_cross_sections(
     )
     xs_coords = sample_cross_sections(xs_lines, point_spacing)
     xs_coords["point_id"] = np.arange(len(xs_coords))
-    xs_coords["interpolated_elevation"] = elevation.interp(
+    xs_coords["interp_elevation"] = elevation.interp(
         x=xr.DataArray(xs_coords["geometry"].x.values),
         y=xr.DataArray(xs_coords["geometry"].y.values),
         method="linear",
@@ -101,7 +88,7 @@ def detect_slope_breaks(xs_coords, steep_slope, min_elevation_gain):
                         "xs_id": xs_id,
                         "side": side,
                         "geometry": matched_row.geometry.values[0],
-                        "elevation": matched_row.interpolated_elevation.values[0],
+                        "elevation": matched_row.interp_elevation.values[0],
                     }
                 )
     if results_list:
@@ -118,34 +105,52 @@ def detect_slope_breaks(xs_coords, steep_slope, min_elevation_gain):
 
 
 def derive_reach_thresholds(
-    points_gdf, detrended_dem, subbasins, default_elevation, percentile
+    points_gdf, detrended_dem, subbasins, default_elevation, percentile, min_points
 ):
+    def mad_filter(data):
+        data = data[np.isfinite(data)]
+        median = np.median(data)
+        mad = np.median(np.abs(data - median))
+        cutoff = median + 3 * mad
+        return cutoff
+
     points_gdf["subbasin"] = subbasins.sel(
-        x=xr.DataArarray(points_gdf.geometry.x.values),
+        x=xr.DataArray(points_gdf.geometry.x.values),
         y=xr.DataArray(points_gdf.geometry.y.values),
         method="nearest",
     )
     points_gdf["elevation"] = detrended_dem.sel(
-        x=xr.DataArarray(points_gdf.geometry.x.values),
+        x=xr.DataArray(points_gdf.geometry.x.values),
         y=xr.DataArray(points_gdf.geometry.y.values),
         method="nearest",
     )
 
     reach_thresholds = {}
-    for subbasin_id, group in np.unique(subbasins.values):
+    points_gdf["is_outlier"] = False
+    for subbasin_id, group in points_gdf.groupby("subbasin"):
         if np.isnan(subbasin_id) or subbasin_id == 0:
             continue
         if not group.empty:
             values = group["elevation"].values
+            cutoff = mad_filter(values)
+            is_above = group["elevation"] > cutoff
+            points_gdf.loc[is_above.index, "is_outlier"] = is_above
+            values = values[values <= cutoff]
             values = values[np.isfinite(values)]
-            if len(values) == 0:
+            if len(values) < min_points:
                 threshold = default_elevation
             else:
                 threshold = np.percentile(values, percentile)
         else:
             threshold = default_elevation
         reach_thresholds[subbasin_id] = threshold
-    return reach_thresholds
+
+    for subbasin_id in np.unique(subbasins.values):
+        if subbasin_id == 0 or np.isnan(subbasin_id):
+            continue
+        if subbasin_id not in reach_thresholds:
+            reach_thresholds[int(subbasin_id)] = default_elevation
+    return reach_thresholds, points_gdf
 
 
 def find_slope_breaks(gdf, min_slope_degrees, min_elevation_gain):
@@ -193,7 +198,14 @@ def find_slope_breaks(gdf, min_slope_degrees, min_elevation_gain):
             )
 
             if gain > min_elevation_gain:
-                found_point = group.iloc[0]["point_id"]
+                if group.iloc[0]["distance"] == 0:
+                    if len(group) > 1:
+                        found_point = group.iloc[1]["point_id"]
+                    else:
+                        found_point = group.iloc[0]["point_id"]
+                else:  # first point in the steep segment
+                    found_point = group.iloc[0]["point_id"]
+
                 break
 
         results[side_name] = found_point
