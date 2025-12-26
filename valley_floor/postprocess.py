@@ -5,6 +5,9 @@ This module provides functions to post-process a floor raster.
 from skimage.morphology import remove_small_holes
 from skimage.morphology import label
 import numpy as np
+import xarray as xr
+
+from .config import PostProcessParameters
 
 
 def remove_isolated_areas(binary, flowpaths):
@@ -26,20 +29,6 @@ def remove_isolated_areas(binary, flowpaths):
     result = result.where(np.isin(con, values))
     result = result > 0
     return result
-
-
-def combine_floors(
-    flood_extent_floor,
-    low_slope_floor,
-):
-    return flood_extent_floor | low_slope_floor
-
-
-def burnin_streams(
-    floor,
-    channel_network,
-):
-    return floor + (channel_network > 0)
 
 
 def close_holes(
@@ -71,23 +60,27 @@ def label_by_subbasin(
 
 
 def process_floor(
-    flood_extent_floor,
-    low_slope_floor,
-    channel_network,
-    min_size=0.0,
-    subbasins=None,
-):
-    floor = combine_floors(flood_extent_floor, low_slope_floor)
+    region_floor: xr.DataArray,
+    flood_floor: xr.DataArray,
+    channel_network: xr.DataArray,
+    slope: xr.DataArray,
+    params: PostProcessParameters,
+) -> xr.DataArray:
+    floor = region_floor | flood_floor
 
-    floor = burnin_streams(floor, channel_network)
+    floor.data[slope > params.max_slope] = 0
+    floor = floor == 1
+
+    if params.min_size > 0:
+        floor = close_holes(floor, params.min_size)
+
     floor = remove_isolated_areas(floor, channel_network)
 
-    if min_size > 0:
-        floor = close_holes(floor, min_size)
-
-    if subbasins is not None:
-        floor = label_by_subbasin(floor, subbasins)
-
-    floor = floor > 0
+    floor.data[channel_network > 0] = 1
     floor = floor.astype(np.uint8)
+
+    floor.data[np.isnan(slope.data)] = 255
+    floor = floor.rio.write_nodata(255)
+    floor = floor.rio.set_nodata(255)
+    floor.attrs["_FillValue"] = 255
     return floor

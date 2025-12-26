@@ -1,11 +1,7 @@
 from .config import Config
-from .pipeline import delineate_valley_floor
-from .data import load_sample_dem
-from .data import load_sample_flowlines
+from .valley_floor import delineate_valley_floor
 
 __all__ = [
     "Config",
     "delineate_valley_floor",
-    "load_sample_dem",
-    "load_sample_flowlines",
 ]
