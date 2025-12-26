@@ -1,7 +1,7 @@
 from .config import Config
 from .components import grow_region, flood_reaches
-from .preprocessing import preprocess_hydro
 from .postprocess import process_floor
+from .preprocess import process_hydro
 
 from xrspatial import slope as compute_slope
 
@@ -18,7 +18,7 @@ def delineate_valley_floor(
         trunk_network_gdf,
         subbasins,
         hand,
-    ) = preprocess_hydro(
+    ) = process_hydro(
         dem,
         channel_heads,
         config.reach,

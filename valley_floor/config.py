@@ -11,7 +11,7 @@ class ReachParameters:
 
 @dataclass
 class HeadwaterFilterParameters:
-    min_stream_order: int = 2
+    min_catchment_area: int = 1_500_000
     max_mean_slope: float = 5.0
 
 
