@@ -34,14 +34,12 @@ Import and use the package as follows:
 
 ```python
 from valley_floor import Config
-from valley_floor import load_sample_dem
-from valley_floor import load_sample_flowlines
 from valley_floor import delineate_valley_floor
+from valley_floor.data import load_sample_data
 
 config = Config()
-dem = load_sample_dem()
-flowlines = load_sample_flowlines()
-valley_floors = delineate_valley_floor(dem, flowlines, config)
+dem, channel_heads = load_sample_data()
+valley_floors = delineate_valley_floor(dem, channel_heads, config)
 ```
 
 ## Configuration
@@ -49,7 +47,7 @@ You can customize the delineation process by modifying the `Config` object:
 
 ```python
 config = Config()
-config.region_delineation.slope_threshold = 5
+config.cross_section.interval_distance = 50 # meters between cross sections
 ```
 
 # Contact
