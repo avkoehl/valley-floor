@@ -50,7 +50,6 @@ def apply_flooding(detrended_dem, elevation_thresholds, subbasins):
     floor.data[np.isnan(detrended_dem.data)] = 255
     floor = floor.rio.set_nodata(255)
     floor = floor.rio.write_nodata(255, encoded=True)
-    floor.attrs["_FillValue"] = 255
 
     return floor
 
