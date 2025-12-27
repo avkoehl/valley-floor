@@ -66,7 +66,7 @@ def process_floor(
     slope: xr.DataArray,
     params: PostProcessParameters,
 ) -> xr.DataArray:
-    floor = region_floor | flood_floor
+    floor = (region_floor == 1) | (flood_floor == 1)
 
     floor.data[slope > params.max_slope] = 0
     floor = floor == 1
