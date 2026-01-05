@@ -1,11 +1,22 @@
 # Valley-Floor
-This repository contains a python package for delineating valley floors from digital elevation models (DEMs) and hydrologic data.
 
-There are two main methods for delineating valley floors:
-1. **Region Floor**: This method identifies low-slope regions that are connected to the river network, suitable for larger (unconfined) valley floors.
-2. **Flood Extent Floor**: This method identifies the valley floor based on flood stage thresholds, suitable for smaller (confined) valley floors.
+This repository contains a python package for delineating valley floors from
+digital elevation models (DEMs) of mountainous watersheds. Valley floors are
+the topographic region between valley walls (hillslopes) that are mainly shaped by
+fluvial processes and are composed of alluvial fans, floodplains, terraces, and
+channels.
 
-The two can be combined to create a comprehensive valley floor delineation for a mountainous watershed.
+The method predicts valley floor pixels by combining pixels identified by either of two components:
+
+1. Low-slope pixels with connectivity to the channel network. This is
+   especially useful for larger flatter unconfined valley floors where multiple
+channels and floodplains exist.
+2. Reach specific relative elevation to channel thresholding, where the
+   thresholds are determined from analysis of cross sections detecting
+transition to sustained high slopes (valley walls). This is especially useful
+for confined steep valley floors where floodplains are narrow (but may be high
+slope and have roughness) and closely bound by hillslopes.
+
 
 # Installation
 
