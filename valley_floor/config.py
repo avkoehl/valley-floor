@@ -1,4 +1,6 @@
+import dataclasses
 from dataclasses import dataclass, field
+import json
 
 
 @dataclass
@@ -62,3 +64,21 @@ class Config:
     slope_break: SlopeBreakParameters = field(default_factory=SlopeBreakParameters)
     threshold: ThresholdParameters = field(default_factory=ThresholdParameters)
     post_process: PostProcessParameters = field(default_factory=PostProcessParameters)
+
+    def to_json(self, file_path: str):
+        with open(file_path, "w") as f:
+            json.dump(dataclasses.asdict(self), f, indent=4)
+
+    @classmethod
+    def from_json(cls, path):
+        with open(path) as f:
+            data = json.load(f)
+        return cls(
+            reach=ReachParameters(**data["reach"]),
+            headwater_filter=HeadwaterFilterParameters(**data["headwater_filter"]),
+            region=RegionParameters(**data["region"]),
+            cross_section=CrossSectionParameters(**data["cross_section"]),
+            slope_break=SlopeBreakParameters(**data["slope_break"]),
+            threshold=ThresholdParameters(**data["threshold"]),
+            post_process=PostProcessParameters(**data["post_process"]),
+        )
