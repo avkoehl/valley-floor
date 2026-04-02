@@ -18,14 +18,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-preprocessing = [
-    "streamkit @ git+https://github.com/avkoehl/streamkit.git",
+streamkit = [
+    "streamkit[datasets,segmentation] @ git+https://github.com/avkoehl/streamkit.git",
 ]
 
 [dependency-groups]
 dev = [
     "ipython>=9.4.0",
     "matplotlib>=3.10.0",
+    "pytest>=8.0.0"
 ]
 
 [build-system]
@@ -34,3 +35,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

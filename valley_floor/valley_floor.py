@@ -1,57 +1,56 @@
-from .config import Config
+import xarray as xr
+import geopandas as gpd
+
+from .config import Parameters, PreprocessingParameters
 from .components import grow_region, flood_reaches
-from .postprocess import process_floor
-from .preprocess import process_hydro
-
-from xrspatial import slope as compute_slope
 
 
-def delineate_valley_floor(
-    dem,
-    channel_heads,
-    config: Config = Config(),
-):
-    (
-        channel_network,
-        channel_network_gdf,
-        trunk_network,
-        trunk_network_gdf,
-        subbasins,
-        hand,
-    ) = process_hydro(
-        dem,
-        channel_heads,
-        config.reach,
-        config.headwater_filter,
-    )
-
-    region_floor = grow_region(dem, trunk_network, config.region)
-    flood_floor, break_pts, reach_thresholds = flood_reaches(
-        trunk_network_gdf,
-        dem,
+def delineate(
+    dem: xr.DataArray,
+    hand: xr.DataArray,
+    subbasins: xr.DataArray,
+    xs_coords: gpd.GeoDataFrame,
+    channel_network: xr.DataArray,
+    params: Parameters = Parameters(),
+) -> dict:
+    region_floor = grow_region(dem, channel_network, params)
+    flood_floor, slope_break_pts, reach_thresholds = flood_reaches(
+        xs_coords,
         hand,
         subbasins,
-        config.cross_section,
-        config.slope_break,
-        config.threshold,
-    )
-    trunk_network_gdf["threshold"] = trunk_network_gdf["stream_id"].map(
-        reach_thresholds
-    )
-    valley_floor = process_floor(
-        region_floor,
-        flood_floor,
-        channel_network,
-        compute_slope(dem),
-        config.post_process,
+        params,
     )
     return {
-        "channel_network": channel_network,
-        "channel_network_gdf": channel_network_gdf,
-        "valley_floor": valley_floor,
-        "trunk_network": trunk_network,
-        "trunk_network_gdf": trunk_network_gdf,
-        "flood_floor": flood_floor,
         "region_floor": region_floor,
-        "break_points": break_pts,
+        "flood_floor": flood_floor,
+        "slope_break_pts": slope_break_pts,
+        "reach_thresholds": reach_thresholds,
     }
+
+
+def delineate_from_dem_and_flowlines(
+    dem: xr.DataArray,
+    flowlines: gpd.GeoDataFrame,
+    params: Parameters = Parameters(),
+    preprocessing_params: PreprocessingParameters = PreprocessingParameters(),
+) -> dict:
+    from .preprocess import preprocess
+
+    pre = preprocess(dem, flowlines, preprocessing_params)
+    result = delineate(
+        dem,
+        pre["hand"],
+        pre["subbasins"],
+        pre["xs_coords"],
+        pre["trunk_network"],
+        params,
+    )
+    result.update(
+        {
+            "channel_network": pre["channel_network"],
+            "channel_network_gdf": pre["channel_network_gdf"],
+            "trunk_network": pre["trunk_network"],
+            "trunk_network_gdf": pre["trunk_network_gdf"],
+        }
+    )
+    return result

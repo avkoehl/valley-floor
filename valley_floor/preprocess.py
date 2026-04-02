@@ -1,86 +1,97 @@
-from streamkit.extraction import (
-    extract_channel_network,
-    delineate_reaches,
-    delineate_subbasins,
-)
-from streamkit.network import analyze_stream_network
-from streamkit.terrain import compute_hand_wbt, flow_accumulation_workflow
+import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from .config import ReachParameters, HeadwaterFilterParameters
+from streamkit.extraction import (
+    channel_heads_from_flowlines,
+    extract_channel_network,
+    delineate_subbasins,
+)
+from streamkit.network import (
+    analyze_network,
+    create_cross_sections,
+    cross_sections_to_points,
+)
+from streamkit.segmentation import delineate_reaches
+from streamkit.terrain import compute_hand, flow_accumulation_workflow
+
+from .config import PreprocessingParameters
 
 
-def process_hydro(
+def preprocess(
     dem: xr.DataArray,
-    channel_heads: xr.DataArray,
-    reach_params: ReachParameters,
-    headwater_filter_params: HeadwaterFilterParameters,
-) -> tuple[
-    xr.DataArray,
-    gpd.GeoDataFrame,
-    xr.DataArray,
-    gpd.GeoDataFrame,
-    xr.DataArray,
-    xr.DataArray,
-]:
-    conditioned, flow_dir, flow_acc, channel_network = hydro_base(dem, channel_heads)
+    flowlines: gpd.GeoDataFrame,
+    params: PreprocessingParameters,
+) -> dict:
+    channel_heads = channel_heads_from_flowlines(flowlines, dem)
+    conditioned, flow_dir, flow_acc = flow_accumulation_workflow(dem)
+    channel_network = extract_channel_network(channel_heads, flow_dir)
 
     channel_network = delineate_reaches(
         channel_network,
         dem,
         flow_dir,
         flow_acc,
-        reach_params.penalty,
-        reach_params.min_length,
-        reach_params.smooth_window,
-        reach_params.threshold_degrees,
+        params.reach_penalty,
+        params.reach_min_length,
+        params.reach_smooth_window,
+        params.reach_threshold_degrees,
     )
-    channel_network_gdf = analyze_stream_network(
-        channel_network,
-        dem,
-        flow_dir,
-        flow_acc,
-    )
+    channel_network_gdf = analyze_network(channel_network, dem, flow_dir, flow_acc)
 
-    trunk_network_gdf, trunk_network = prune_headwaters(
+    trunk_network_gdf, trunk_network = _prune_headwaters(
         channel_network,
         channel_network_gdf,
-        headwater_filter_params.min_catchment_area,
-        headwater_filter_params.max_mean_slope,
+        params.headwater_min_catchment_area,
+        params.headwater_max_mean_slope,
     )
 
     subbasins = delineate_subbasins(trunk_network, flow_dir, flow_acc)
-    hand = compute_hand_wbt(conditioned, trunk_network)
-    return (
-        channel_network,
-        channel_network_gdf,
-        trunk_network,
+    hand = compute_hand(conditioned, trunk_network)
+    xs_coords = _generate_cross_section_points(
         trunk_network_gdf,
-        subbasins,
-        hand,
+        dem,
+        params.xs_interval_distance,
+        params.xs_length,
+        params.xs_point_spacing,
     )
 
+    return {
+        "channel_network": channel_network,
+        "channel_network_gdf": channel_network_gdf,
+        "trunk_network": trunk_network,
+        "trunk_network_gdf": trunk_network_gdf,
+        "subbasins": subbasins,
+        "hand": hand,
+        "xs_coords": xs_coords,
+    }
 
-def hydro_base(dem, channel_heads):
-    conditioned_dem, flow_dir, flow_acc = flow_accumulation_workflow(dem)
-    channel_network = extract_channel_network(channel_heads, flow_dir)
-    return conditioned_dem, flow_dir, flow_acc, channel_network
+
+def _generate_cross_section_points(
+    network_gdf, elevation, interval_distance, length, point_spacing
+):
+    xs_lines = create_cross_sections(
+        network_gdf.geometry, interval_distance, length, smoothed=True
+    )
+    xs_coords = cross_sections_to_points(xs_lines, point_spacing)
+    xs_coords["point_id"] = np.arange(len(xs_coords))
+    xs_coords["interp_elevation"] = elevation.interp(
+        x=xr.DataArray(xs_coords["geometry"].x.values),
+        y=xr.DataArray(xs_coords["geometry"].y.values),
+        method="linear",
+    ).values
+    return xs_coords
 
 
-def prune_headwaters(channel_network, network_gdf, min_catchment_area, max_mean_slope):
-    # Identify headwater reaches to remove
-    # go down the network reach by reach find the first reach with catchment area greater than the threshold
-    # and is below the max mean slope
+def _prune_headwaters(channel_network, network_gdf, min_catchment_area, max_mean_slope):
     to_remove_ids = []
     network = network_gdf.copy()
     network["segment_id"] = (network["stream_id"] // 1000).astype(int)
     for _, segment in network.groupby("segment_id"):
         if segment["strahler"].min() >= 2:
-            continue  # not a headwater segment
+            continue
         segment = segment.sort_values("contributing_area")
         for _, reach in segment.iterrows():
-            # is this reach a headwater reach?
             if (
                 reach["contributing_area"] < min_catchment_area
                 or reach["mean_slope"] > max_mean_slope
@@ -88,8 +99,8 @@ def prune_headwaters(channel_network, network_gdf, min_catchment_area, max_mean_
                 to_remove_ids.append(reach["stream_id"])
             else:
                 break
-    trunk_gdf = network_gdf[~network_gdf["stream_id"].isin(to_remove_ids)].copy()
 
+    trunk_gdf = network_gdf[~network_gdf["stream_id"].isin(to_remove_ids)].copy()
     trunk_network = channel_network.copy(deep=True)
     for val in to_remove_ids:
         trunk_network.data[channel_network.data == val] = 0

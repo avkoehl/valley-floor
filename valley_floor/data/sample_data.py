@@ -1,28 +1,26 @@
 from platformdirs import user_cache_dir
 from pathlib import Path
 import rioxarray
-
-from streamkit.datasets import get_huc_data
-from streamkit.extraction import heads_from_features
+import geopandas as gpd
+from streamkit.datasets import download_huc_data
 
 CACHE_DIR = Path(user_cache_dir("valley_floor"))
+HUC_ID = "1805000203"
 
 
 def load_sample_data():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     dem_path = CACHE_DIR / "sample_dem.tif"
-    channel_heads_path = CACHE_DIR / "sample_channel_heads.tif"
+    flowlines_path = CACHE_DIR / "sample_flowlines.gpkg"
 
-    if not dem_path.exists() or not channel_heads_path.exists():
+    if not dem_path.exists() or not flowlines_path.exists():
         print(f"Sample data not found in cache. Downloading to {CACHE_DIR}...")
-        dem, flowlines = get_huc_data("1805000203", nhd_layer="high", crs="EPSG:3310")
-        heads = heads_from_features(flowlines, dem)
+        dem, flowlines = download_huc_data(HUC_ID, nhd_layer="high", crs="EPSG:3310")
         dem.rio.to_raster(dem_path, compress="LZW")
-        heads.rio.to_raster(channel_heads_path, compress="LZW")
-
+        flowlines.to_file(flowlines_path, driver="GPKG")
     else:
         print(f"Loading sample data from cache at {CACHE_DIR}...")
 
-    dem = rioxarray.open_rasterio(dem_path).squeeze()
-    channel_heads = rioxarray.open_rasterio(channel_heads_path).squeeze()
-    return dem, channel_heads
+    dem = rioxarray.open_rasterio(dem_path, masked=True).squeeze()
+    flowlines = gpd.read_file(flowlines_path)
+    return dem, flowlines

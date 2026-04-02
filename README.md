@@ -22,7 +22,7 @@ pip install "valley-floor @ git+https://github.com/avkoehl/valley-floor.git"
 
 With the optional preprocessing pipeline (requires streamkit):
 ```bash
-pip install "valley-floor[preprocessing] @ git+https://github.com/avkoehl/valley-floor.git"
+pip install "valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git"
 ```
 
 For development:
