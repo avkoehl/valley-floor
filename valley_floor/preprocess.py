@@ -21,8 +21,30 @@ from .config import PreprocessingParameters
 def preprocess(
     dem: xr.DataArray,
     flowlines: gpd.GeoDataFrame,
-    params: PreprocessingParameters,
+    params: PreprocessingParameters = PreprocessingParameters(),
 ) -> dict:
+    """Prepare hydrological inputs for valley floor delineation using streamkit.
+
+    Runs the full preprocessing pipeline: channel head detection, flow routing,
+    network extraction, reach segmentation, headwater pruning, subbasin
+    delineation, HAND computation, and cross section generation.
+
+    Args:
+        dem: Digital elevation model.
+        flowlines: Stream network as a GeoDataFrame of directed LineStrings,
+            from upstream to downstream.
+        params: Preprocessing parameters. Defaults to PreprocessingParameters().
+
+    Returns:
+        Dictionary with keys:
+            - channel_network: Full labeled stream network raster including headwaters.
+            - channel_network_gdf: Full stream network as a GeoDataFrame.
+            - trunk_network: Stream network with headwaters removed (raster).
+            - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame).
+            - subbasins: Raster of subbasin labels, one per trunk reach.
+            - hand: Height Above Nearest Drainage raster.
+            - xs_coords: Cross section sample points as a GeoDataFrame.
+    """
     channel_heads = channel_heads_from_flowlines(flowlines, dem)
     conditioned, flow_dir, flow_acc = flow_accumulation_workflow(dem)
     channel_network = extract_channel_network(channel_heads, flow_dir)

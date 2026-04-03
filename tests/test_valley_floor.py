@@ -65,8 +65,7 @@ def test_delineate_output_values(result):
 def test_postprocess_runs(result):
     dem, pre, res = result
     floor = postprocess(
-        res["region_floor"],
-        res["flood_floor"],
+        res["valley_floor"],
         pre["channel_network"],
         dem,
         PostprocessingParameters(),
@@ -80,8 +79,7 @@ def test_postprocess_changes_output(result):
         (res["region_floor"].values == 1).sum() + (res["flood_floor"].values == 1).sum()
     )
     floor = postprocess(
-        res["region_floor"],
-        res["flood_floor"],
+        res["valley_floor"],
         pre["channel_network"],
         dem,
         PostprocessingParameters(),
@@ -93,8 +91,7 @@ def test_postprocess_changes_output(result):
 def test_postprocess_output_values(result):
     dem, pre, res = result
     floor = postprocess(
-        res["region_floor"],
-        res["flood_floor"],
+        res["valley_floor"],
         pre["channel_network"],
         dem,
         PostprocessingParameters(),
