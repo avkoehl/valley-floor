@@ -30,7 +30,12 @@ For development:
 git clone git@github.com:avkoehl/valley-floor.git
 cd valley-floor
 uv sync                        # core only
-uv sync --extra preprocessing  # include streamkit
+uv sync --extra streamkit --group dev  # include streamkit and development dependencies
+```
+
+tests:
+```bash
+uv run pytest -v
 ```
 
 ## Contact

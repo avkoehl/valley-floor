@@ -64,7 +64,7 @@ def close_holes(
 ):
     filled = floor.copy(deep=True)
     num_cells = max_fill_area / floor.rio.resolution()[0] ** 2
-    filled.data = remove_small_holes(filled.data, num_cells)
+    filled.data = remove_small_holes(filled.data, max_size=num_cells)
     return filled
 
 
