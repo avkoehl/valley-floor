@@ -5,6 +5,9 @@ working_dir/
 *.pdf
 cache/
 runner.py
+.quarto/
+docs
+./docs_source/reference
 
 .venv/
 
@@ -55,3 +58,6 @@ __pycache__/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+/.quarto/
+**/*.quarto_ipynb

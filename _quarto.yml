@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "valley-floor"
+  navbar:
+    left:
+      - file: docs_source/notebooks/example.ipynb
+        text: Example
+      - file: docs_source/reference/index.qmd
+        text: Reference
+
+quartodoc:
+  package: valley_floor
+  dir: docs_source/reference
+  parser: google
+  sections:
+    - title: Core
+      contents:
+        - delineate
+        - delineate_from_dem_and_flowlines
+    - title: Postprocessing
+      contents:
+        - postprocess
+    - title: Preprocessing
+      contents:
+        - preprocess
+    - title: Parameters
+      contents:
+        - Parameters
+        - PreprocessingParameters
+        - PostprocessingParameters

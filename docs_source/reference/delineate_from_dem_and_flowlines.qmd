@@ -1,0 +1,38 @@
+# delineate_from_dem_and_flowlines { #valley_floor.delineate_from_dem_and_flowlines }
+
+```python
+delineate_from_dem_and_flowlines(
+    dem,
+    flowlines,
+    params=Parameters(),
+    preprocessing_params=PreprocessingParameters(),
+    postprocessing_params=None,
+)
+```
+
+Delineate valley floors from a DEM and flowlines.
+
+Runs the full pipeline: preprocessing with streamkit to derive hydrological
+inputs, core delineation, and optionally postprocessing. This is the
+recommended entry point for users who do not have precomputed HAND,
+subbasins, or cross sections.
+
+## Requires the streamkit optional dependency {.doc-section .doc-section-requires-the-streamkit-optional-dependency}
+
+pip install "valley-floor[streamkit]"
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name                  | Type                             | Description                                                                                                                                             | Default                     |
+|-----------------------|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|
+| dem                   | xr.DataArray                     | Digital elevation model.                                                                                                                                | _required_                  |
+| flowlines             | gpd.GeoDataFrame                 | Stream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.                                                                  | _required_                  |
+| params                | Parameters                       | Core algorithm parameters. Defaults to Parameters().                                                                                                    | `Parameters()`              |
+| preprocessing_params  | PreprocessingParameters          | Preprocessing pipeline parameters. Defaults to PreprocessingParameters().                                                                               | `PreprocessingParameters()` |
+| postprocessing_params | PostprocessingParameters \| None | If provided, postprocessing is applied to the valley floor raster. If None, the raw union of region and flood components is returned. Defaults to None. | `None`                      |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|        | dict   | Dictionary with keys: - valley_floor: Final valley floor raster (uint8, nodata=255).   If postprocessing_params is provided this is the postprocessed   result, otherwise the raw union of the two components. - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold. - channel_network: Full labeled stream network raster. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame). |

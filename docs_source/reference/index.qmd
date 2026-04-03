@@ -1,0 +1,28 @@
+# Function reference {.doc .doc-index}
+
+## Core
+
+| | |
+| --- | --- |
+| [delineate](delineate.qmd#valley_floor.delineate) | Delineate valley floors from precomputed hydrological inputs. |
+| [delineate_from_dem_and_flowlines](delineate_from_dem_and_flowlines.qmd#valley_floor.delineate_from_dem_and_flowlines) | Delineate valley floors from a DEM and flowlines. |
+
+## Postprocessing
+
+| | |
+| --- | --- |
+| [postprocess](postprocess.qmd#valley_floor.postprocess) |  |
+
+## Preprocessing
+
+| | |
+| --- | --- |
+| [preprocess](preprocess.qmd#valley_floor.preprocess) |  |
+
+## Parameters
+
+| | |
+| --- | --- |
+| [Parameters](Parameters.qmd#valley_floor.Parameters) | Parameters for the core valley floor delineation algorithm. |
+| [PreprocessingParameters](PreprocessingParameters.qmd#valley_floor.PreprocessingParameters) | Parameters for the streamkit-based preprocessing pipeline. |
+| [PostprocessingParameters](PostprocessingParameters.qmd#valley_floor.PostprocessingParameters) | Parameters for postprocessing the valley floor raster. |

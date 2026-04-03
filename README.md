@@ -33,9 +33,16 @@ uv sync                        # core only
 uv sync --extra streamkit --group dev  # include streamkit and development dependencies
 ```
 
-tests:
+## Tests
 ```bash
 uv run pytest -v
+```
+
+## Documentation
+
+```
+uv run quartodoc build
+quarto preview
 ```
 
 ## Contact

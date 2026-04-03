@@ -1,0 +1,34 @@
+# PreprocessingParameters { #valley_floor.PreprocessingParameters }
+
+```python
+PreprocessingParameters(
+    reach_penalty=5,
+    reach_min_length=1000,
+    reach_smooth_window=5,
+    reach_threshold_degrees=1.0,
+    headwater_min_catchment_area=1500000,
+    headwater_max_mean_slope=5.0,
+    xs_interval_distance=100,
+    xs_length=1500,
+    xs_point_spacing=10,
+)
+```
+
+Parameters for the streamkit-based preprocessing pipeline.
+
+Controls reach segmentation, headwater filtering, and cross section generation.
+All spatial units are in the CRS units of the input DEM (typically meters).
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name                         | Type   | Description                                                                                 |
+|------------------------------|--------|---------------------------------------------------------------------------------------------|
+| reach_penalty                | int    | PELT algorithm penalty for reach segmentation. Higher values produce fewer, longer reaches. |
+| reach_min_length             | int    | Minimum reach length in meters.                                                             |
+| reach_smooth_window          | int    | Window size for smoothing slope before segmentation.                                        |
+| reach_threshold_degrees      | float  | Merge adjacent reaches if slope difference is below this threshold in degrees.              |
+| headwater_min_catchment_area | int    | Minimum contributing area in square meters to retain a headwater reach.                     |
+| headwater_max_mean_slope     | float  | Maximum mean slope in degrees for a headwater reach to be retained.                         |
+| xs_interval_distance         | int    | Distance between cross sections in meters.                                                  |
+| xs_length                    | int    | Total length of each cross section in meters.                                               |
+| xs_point_spacing             | int    | Distance between sample points along each cross section in meters.                          |
