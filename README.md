@@ -41,7 +41,7 @@ uv run pytest -v
 
 ## Documentation
 
-```
+```bash
 uv run quartodoc build
 quarto preview
 ```
