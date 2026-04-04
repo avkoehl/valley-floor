@@ -8,6 +8,7 @@ runner.py
 .quarto/
 docs
 ./docs_source/reference
+objects.json
 
 .venv/
 

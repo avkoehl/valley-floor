@@ -23,9 +23,9 @@ quartodoc:
     - title: Postprocessing
       contents:
         - postprocess
-    - title: Preprocessing
+    - title: Inputs
       contents:
-        - preprocess
+        - prepare_inputs
     - title: Parameters
       contents:
         - Parameters

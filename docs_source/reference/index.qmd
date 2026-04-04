@@ -13,11 +13,11 @@
 | --- | --- |
 | [postprocess](postprocess.qmd#valley_floor.postprocess) |  |
 
-## Preprocessing
+## Inputs
 
 | | |
 | --- | --- |
-| [preprocess](preprocess.qmd#valley_floor.preprocess) |  |
+| [prepare_inputs](prepare_inputs.qmd#valley_floor.prepare_inputs) | Prepare hydrological inputs for valley floor delineation using streamkit. |
 
 ## Parameters
 

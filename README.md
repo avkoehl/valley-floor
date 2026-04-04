@@ -31,7 +31,7 @@ git clone git@github.com:avkoehl/valley-floor.git
 cd valley-floor
 uv sync                        # core only
 uv sync --extra streamkit --group dev  # include streamkit and development dependencies
-uv run ipykernal install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel
+uv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel
 ```
 
 ## Tests
