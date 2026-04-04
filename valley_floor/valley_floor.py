@@ -103,9 +103,9 @@ def delineate_from_dem_and_flowlines(
             - trunk_network: Stream network with headwaters removed (raster).
             - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame).
     """
-    from .preprocess import preprocess
+    from .inputs import prepare_inputs
 
-    pre = preprocess(dem, flowlines, preprocessing_params)
+    pre = prepare_inputs(dem, flowlines, preprocessing_params)
     result = delineate(
         dem,
         pre["hand"],

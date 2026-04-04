@@ -18,7 +18,7 @@ from streamkit.terrain import compute_hand, flow_accumulation_workflow
 from .config import PreprocessingParameters
 
 
-def preprocess(
+def prepare_inputs(
     dem: xr.DataArray,
     flowlines: gpd.GeoDataFrame,
     params: PreprocessingParameters = PreprocessingParameters(),

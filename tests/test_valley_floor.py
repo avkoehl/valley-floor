@@ -7,14 +7,14 @@ from valley_floor import (
     delineate,
     postprocess,
 )
-from valley_floor.preprocess import preprocess
+from valley_floor.inputs import prepare_inputs
 from valley_floor.data import load_sample_data
 
 
 @pytest.fixture(scope="session")
 def preprocessed():
     dem, flowlines = load_sample_data()
-    return dem, preprocess(dem, flowlines, PreprocessingParameters())
+    return dem, prepare_inputs(dem, flowlines, PreprocessingParameters())
 
 
 @pytest.fixture(scope="session")
