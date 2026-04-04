@@ -9,6 +9,7 @@ runner.py
 docs
 ./docs_source/reference
 objects.json
+_site/
 
 .venv/
 
