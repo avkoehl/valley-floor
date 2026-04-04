@@ -2,7 +2,8 @@ name: Publish Docs
 on:
   push:
     branches: [main]
-
+permissions:
+  contents: write
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -10,9 +11,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - uses: astral-sh/setup-uv@v3
+          python-version: '3.12'
       - uses: quarto-dev/quarto-actions/setup@v2
-      - run: uv sync --group dev
+      - run: pip install uv && uv sync
       - run: uv run quartodoc build
-      - run: quarto publish gh-pages --no-prompt
+      - uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
