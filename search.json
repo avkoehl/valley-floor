@@ -130,28 +130,28 @@
     "href": "docs_source/index.html",
     "title": "valley-floor",
     "section": "",
-    "text": "A Python package for delineating valley floors from digital elevation models (DEMs).\nValley floors are the topographic region between valley walls shaped mainly by fluvial processes, composed of floodplains, terraces, alluvial fans, and channels.\nThe method combines two components:\n\nRegion growing — low-slope pixels connected to the channel network. Captures wider, unconfined valley floors with multiple channels and floodplains.\nReach flooding — reach-specific relative elevation thresholds derived from cross-section analysis. Captures narrow, confined valley floors bounded by steep hillslopes.\n\n\n\nCore package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\"\nFor development:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\n\n\n\nuv run pytest -v\n\n\n\nuv run quartodoc build\nquarto preview\n\n\n\nArthur Koehl — avkoehl at ucdavis.edu"
+    "text": "A Python package for delineating valley floors from digital elevation models (DEMs).\nValley floors are the topographic region between valley walls shaped mainly by fluvial processes, composed of floodplains, terraces, alluvial fans, and channels.\nThe method combines two components:\n\nRegion growing — low-slope pixels connected to the channel network. Captures wider, unconfined valley floors with multiple channels and floodplains.\nReach flooding — reach-specific relative elevation thresholds derived from cross-section analysis. Captures narrow, confined valley floors bounded by steep hillslopes.\n\n\n\nCore package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\"\n\n\n\nBasic usage:\nfrom valley_floor import (\n    Parameters, \n    PreProcessingParameters,\n    PostProcessingParameters,\n    delineate_from_dem_and_flowlines\n)\n\n# dem is an xarray.DataArray of elevation values\n# flowlines is a gpd.GeoDataFrame of flowline geometries \nresult = delineate_from_dem_and_flowlines(\n    dem=dem,\n    flowlines=flowlines,\n    params=Parameters(),\n    preprocessing_params=PreProcessingParameters(),\n    postprocessing_params=PostProcessingParameters()\n)\n\n\n\nInstall the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview\n\n\n\nArthur Koehl — avkoehl at ucdavis.edu"
   },
   {
     "objectID": "docs_source/index.html#installation",
     "href": "docs_source/index.html#installation",
     "title": "valley-floor",
     "section": "",
-    "text": "Core package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\"\nFor development:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel"
+    "text": "Core package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\""
   },
   {
-    "objectID": "docs_source/index.html#tests",
-    "href": "docs_source/index.html#tests",
+    "objectID": "docs_source/index.html#usage",
+    "href": "docs_source/index.html#usage",
     "title": "valley-floor",
     "section": "",
-    "text": "uv run pytest -v"
+    "text": "Basic usage:\nfrom valley_floor import (\n    Parameters, \n    PreProcessingParameters,\n    PostProcessingParameters,\n    delineate_from_dem_and_flowlines\n)\n\n# dem is an xarray.DataArray of elevation values\n# flowlines is a gpd.GeoDataFrame of flowline geometries \nresult = delineate_from_dem_and_flowlines(\n    dem=dem,\n    flowlines=flowlines,\n    params=Parameters(),\n    preprocessing_params=PreProcessingParameters(),\n    postprocessing_params=PostProcessingParameters()\n)"
   },
   {
-    "objectID": "docs_source/index.html#documentation",
-    "href": "docs_source/index.html#documentation",
+    "objectID": "docs_source/index.html#developement",
+    "href": "docs_source/index.html#developement",
     "title": "valley-floor",
     "section": "",
-    "text": "uv run quartodoc build\nquarto preview"
+    "text": "Install the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview"
   },
   {
     "objectID": "docs_source/index.html#contact",
