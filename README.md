@@ -2,6 +2,8 @@
 
 A Python package for delineating valley floors from digital elevation models (DEMs).
 
+Documentation: https://avkoehl.github.io/valley-floor/
+
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
 processes, composed of floodplains, terraces, alluvial fans, and channels.
 
