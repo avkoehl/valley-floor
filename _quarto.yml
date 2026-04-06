@@ -4,10 +4,10 @@ project:
 
 website:
   title: "valley-floor"
+  repo-url: https://github.com/avkoehl/valley-floor
+  repo-actions: [issue]
   navbar:
     left:
-      - file: docs_source/index.qmd
-        text: Home
       - file: docs_source/notebooks/example.ipynb
         text: Example
       - file: docs_source/reference/index.qmd

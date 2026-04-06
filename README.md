@@ -25,7 +25,32 @@ With the optional preprocessing pipeline and example dataset (requires streamkit
 pip install "valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git"
 ```
 
-For development:
+## Usage
+
+Basic usage:
+```python
+from valley_floor import (
+    Parameters, 
+    PreProcessingParameters,
+    PostProcessingParameters,
+    delineate_from_dem_and_flowlines
+)
+
+# dem is an xarray.DataArray of elevation values
+# flowlines is a gpd.GeoDataFrame of flowline geometries 
+result = delineate_from_dem_and_flowlines(
+    dem=dem,
+    flowlines=flowlines,
+    params=Parameters(),
+    preprocessing_params=PreProcessingParameters(),
+    postprocessing_params=PostProcessingParameters()
+)
+```
+
+## Developement
+
+Install the package with development dependencies and register the package's
+virtual environment as a Jupyter kernel:
 ```bash
 git clone git@github.com:avkoehl/valley-floor.git
 cd valley-floor
@@ -34,13 +59,13 @@ uv sync --extra streamkit --group dev  # include streamkit and development depen
 uv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel
 ```
 
-## Tests
+
+Run tests with pytest:
 ```bash
 uv run pytest -v
 ```
 
-## Documentation
-
+Build the documentation and preview it locally:
 ```bash
 uv run quartodoc build
 quarto preview
