@@ -46,7 +46,7 @@
     "href": "docs_source/reference/PostprocessingParameters.html",
     "title": "PostprocessingParameters",
     "section": "",
-    "text": "PostprocessingParameters(min_size=40000, max_slope=12.0)\nParameters for postprocessing the valley floor raster.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
+    "text": "PostprocessingParameters(min_size=40000, max_slope=15.0)\nParameters for postprocessing the valley floor raster.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
   },
   {
     "objectID": "docs_source/reference/PostprocessingParameters.html#attributes",
@@ -116,7 +116,7 @@
     "href": "docs_source/notebooks/example.html#run-delineation",
     "title": "Example",
     "section": "Run delineation",
-    "text": "Run delineation\nRun the full pipeline with default parameters. Passing PostprocessingParameters applies postprocessing to the output — remove this argument to get the raw union of the two components.\n\nresult = delineate_from_dem_and_flowlines(\n    dem,\n    flowlines,\n    params=Parameters(),\n    preprocessing_params=PreprocessingParameters(),\n    postprocessing_params=PostprocessingParameters(),\n)"
+    "text": "Run delineation\nRun the full pipeline with default parameters. Passing PostprocessingParameters applies postprocessing to the output (remove high slope cells and close small holes).\n\nresult = delineate_from_dem_and_flowlines(\n    dem,\n    flowlines,\n    params=Parameters(),\n    preprocessing_params=PreprocessingParameters(),\n    postprocessing_params=PostprocessingParameters(),\n)"
   },
   {
     "objectID": "docs_source/notebooks/example.html#visualize-results",

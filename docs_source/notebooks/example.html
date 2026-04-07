@@ -230,7 +230,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="run-delineation" class="level2">
 <h2 class="anchored" data-anchor-id="run-delineation">Run delineation</h2>
-<p>Run the full pipeline with default parameters. Passing <code>PostprocessingParameters</code> applies postprocessing to the output — remove this argument to get the raw union of the two components.</p>
+<p>Run the full pipeline with default parameters. Passing <code>PostprocessingParameters</code> applies postprocessing to the output (remove high slope cells and close small holes).</p>
 <div id="cell-6" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> delineate_from_dem_and_flowlines(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    dem,</span>
