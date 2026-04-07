@@ -112,7 +112,7 @@ class PostprocessingParameters:
     """
 
     min_size: int = 40_000
-    max_slope: float = 12.0
+    max_slope: float = 15.0
 
     def to_json(self, file_path: str):
         with open(file_path, "w") as f:

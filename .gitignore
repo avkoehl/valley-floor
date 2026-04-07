@@ -10,6 +10,7 @@ docs
 ./docs_source/reference
 objects.json
 _site/
+run.py
 
 .venv/
 
