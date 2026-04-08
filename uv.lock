@@ -3157,7 +3157,7 @@ wheels = [
 [[package]]
 name = "streamkit"
 version = "0.1.0"
-source = { git = "https://github.com/avkoehl/streamkit.git#41bed23a54f4af00419927bed696e6b7b175df49" }
+source = { git = "https://github.com/avkoehl/streamkit.git#1fc96558754e1448b8ebc11611dd38e84a1a48e1" }
 dependencies = [
     { name = "geopandas" },
     { name = "networkx" },
