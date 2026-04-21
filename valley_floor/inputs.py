@@ -86,6 +86,10 @@ def prepare_inputs(
         "subbasins": subbasins,
         "hand": hand,
         "xs_coords": xs_coords,
+        "flow_dir": flow_dir,
+        "flow_acc": flow_acc,
+        "conditioned": conditioned,
+        "channel_heads": channel_heads,
     }
 
 
