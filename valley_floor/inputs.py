@@ -44,6 +44,10 @@ def prepare_inputs(
             - subbasins: Raster of subbasin labels, one per trunk reach.
             - hand: Height Above Nearest Drainage raster.
             - xs_coords: Cross section sample points as a GeoDataFrame.
+            - flow_dir: Flow direction raster.
+            - flow_acc: Flow accumulation raster.
+            - conditioned: Conditioned DEM used for flow routing.
+            - channel_heads: Detected channel head points as a GeoDataFrame.
     """
     channel_heads = channel_heads_from_flowlines(flowlines, dem)
     conditioned, flow_dir, flow_acc = flow_accumulation_workflow(dem)
