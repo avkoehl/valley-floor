@@ -56,8 +56,8 @@ def detect_slope_breaks(xs_coords, steep_slope, min_elevation_gain):
                     {
                         "xs_id": xs_id,
                         "side": side,
-                        "geometry": matched_row.geometry.values[0],
-                        "elevation": matched_row.interp_elevation.values[0],
+                        "geometry": matched_row.geometry,
+                        "elevation": matched_row.interp_elevation,
                     }
                 )
     if results_list:
