@@ -43,13 +43,15 @@ def apply_flooding(detrended_dem, elevation_thresholds, subbasins):
 
 
 def detect_slope_breaks(xs_coords, steep_slope, min_elevation_gain):
+    point_id_index = xs_coords.set_index("point_id")
+
     results_list = []
     for xs_id, xs in xs_coords.groupby("xs_id"):
         breaks = find_slope_breaks(xs, steep_slope, min_elevation_gain)
         for side in ["left", "right"]:
             found_id = breaks[side]
             if found_id is not None:
-                matched_row = xs_coords[xs_coords["point_id"] == found_id]
+                matched_row = point_id_index.loc[found_id]
                 results_list.append(
                     {
                         "xs_id": xs_id,
