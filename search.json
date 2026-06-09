@@ -1,222 +1,5 @@
 [
   {
-    "objectID": "docs_source/index.html",
-    "href": "docs_source/index.html",
-    "title": "vhs (Valley Hillslope Separator)",
-    "section": "",
-    "text": "A Python package for delineating valley floors from digital elevation models (DEMs).\nDocumentation: https://avkoehl.github.io/valley-floor/\nValley floors are the topographic region between valley walls shaped mainly by fluvial processes, composed of floodplains, terraces, alluvial fans, and channels.\nThe method combines two components:\n\nRegion growing — low-slope pixels connected to the channel network. Captures wider, unconfined valley floors with multiple channels and floodplains.\nReach flooding — reach-specific relative elevation thresholds derived from cross-section analysis. Captures narrow, confined valley floors bounded by steep hillslopes.\n\n\n\nCore package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\"\n\n\n\n\n\nIf you have your own HAND, channel network, and subbasins:\nfrom vhs import map_valley_floor, Parameters\n\n# all four inputs are xarray.DataArrays on the same grid\nvalley_floor = map_valley_floor(\n    dem=dem,\n    hand=hand,\n    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins\n    subbasins=subbasins,\n    params=Parameters(),              # optional, defaults shown\n)\n# valley_floor is an xarray.DataArray (uint8, nodata=255)\nFor access to intermediate outputs (region floor, flood floor, slope break points, per-reach HAND thresholds):\nfrom vhs import map_valley_floor_detailed\n\nresult = map_valley_floor_detailed(dem, hand, channel_network, subbasins)\nresult.valley_floor       # final binary raster\nresult.region_floor       # region growing component\nresult.flood_floor        # reach flooding component\nresult.slope_break_pts    # GeoDataFrame of detected valley wall points\nresult.reach_thresholds   # dict of {reach_id: HAND threshold}\n\n\n\nIf you have a raw DEM and vector flowlines, prepare_inputs runs a streamkit-based workflow to produce the four required inputs:\nfrom vhs import map_valley_floor, prepare_inputs\n\ndem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins)\n\n\n\nfrom vhs import Parameters\n\nparams = Parameters(\n    region_slope_threshold=2.0,   # degrees, tighter region growing\n    flood_percentile=90.0,        # higher HAND threshold per reach\n    min_hole_size=20_000,         # m², smaller holes filled\n)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)\n\n\n\n\nInstall the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview\n\n\n\nArthur Koehl — avkoehl at ucdavis.edu"
-  },
-  {
-    "objectID": "docs_source/index.html#installation",
-    "href": "docs_source/index.html#installation",
-    "title": "vhs (Valley Hillslope Separator)",
-    "section": "",
-    "text": "Core package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\""
-  },
-  {
-    "objectID": "docs_source/index.html#usage",
-    "href": "docs_source/index.html#usage",
-    "title": "vhs (Valley Hillslope Separator)",
-    "section": "",
-    "text": "If you have your own HAND, channel network, and subbasins:\nfrom vhs import map_valley_floor, Parameters\n\n# all four inputs are xarray.DataArrays on the same grid\nvalley_floor = map_valley_floor(\n    dem=dem,\n    hand=hand,\n    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins\n    subbasins=subbasins,\n    params=Parameters(),              # optional, defaults shown\n)\n# valley_floor is an xarray.DataArray (uint8, nodata=255)\nFor access to intermediate outputs (region floor, flood floor, slope break points, per-reach HAND thresholds):\nfrom vhs import map_valley_floor_detailed\n\nresult = map_valley_floor_detailed(dem, hand, channel_network, subbasins)\nresult.valley_floor       # final binary raster\nresult.region_floor       # region growing component\nresult.flood_floor        # reach flooding component\nresult.slope_break_pts    # GeoDataFrame of detected valley wall points\nresult.reach_thresholds   # dict of {reach_id: HAND threshold}\n\n\n\nIf you have a raw DEM and vector flowlines, prepare_inputs runs a streamkit-based workflow to produce the four required inputs:\nfrom vhs import map_valley_floor, prepare_inputs\n\ndem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins)\n\n\n\nfrom vhs import Parameters\n\nparams = Parameters(\n    region_slope_threshold=2.0,   # degrees, tighter region growing\n    flood_percentile=90.0,        # higher HAND threshold per reach\n    min_hole_size=20_000,         # m², smaller holes filled\n)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)"
-  },
-  {
-    "objectID": "docs_source/index.html#developement",
-    "href": "docs_source/index.html#developement",
-    "title": "vhs (Valley Hillslope Separator)",
-    "section": "",
-    "text": "Install the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview"
-  },
-  {
-    "objectID": "docs_source/index.html#contact",
-    "href": "docs_source/index.html#contact",
-    "title": "vhs (Valley Hillslope Separator)",
-    "section": "",
-    "text": "Arthur Koehl — avkoehl at ucdavis.edu"
-  },
-  {
-    "objectID": "docs_source/reference/prepare_inputs.html",
-    "href": "docs_source/reference/prepare_inputs.html",
-    "title": "prepare_inputs",
-    "section": "",
-    "text": "prepare_inputs(\n    dem,\n    flowlines,\n    reach_penalty=5,\n    reach_min_length=1000,\n    reach_smooth_window=5,\n    reach_threshold_degrees=1.0,\n)\nPrepare inputs for map_valley_floor using streamkit.\nProduces dem, hand, channel_network, and subbasins from a raw DEM and vector flowlines. The returned dem is the original input — it is not hydrologically conditioned. HAND and subbasins are derived from a conditioned DEM internally.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nRaw digital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nVector stream network as a GeoDataFrame of LineStrings.\nrequired\n\n\nreach_penalty\nint\nPELT penalty for reach segmentation. Higher values produce fewer, longer reaches.\n5\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n1000\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n5\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n1.0\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nTuple of (dem, hand, channel_network, subbasins), ready to pass\n\n\n\nxr.DataArray\ndirectly to map_valley_floor."
-  },
-  {
-    "objectID": "docs_source/reference/prepare_inputs.html#parameters",
-    "href": "docs_source/reference/prepare_inputs.html#parameters",
-    "title": "prepare_inputs",
-    "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nRaw digital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nVector stream network as a GeoDataFrame of LineStrings.\nrequired\n\n\nreach_penalty\nint\nPELT penalty for reach segmentation. Higher values produce fewer, longer reaches.\n5\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n1000\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n5\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n1.0"
-  },
-  {
-    "objectID": "docs_source/reference/prepare_inputs.html#returns",
-    "href": "docs_source/reference/prepare_inputs.html#returns",
-    "title": "prepare_inputs",
-    "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\n\nxr.DataArray\nTuple of (dem, hand, channel_network, subbasins), ready to pass\n\n\n\nxr.DataArray\ndirectly to map_valley_floor."
-  },
-  {
-    "objectID": "docs_source/reference/index.html",
-    "href": "docs_source/reference/index.html",
-    "title": "Function reference",
-    "section": "",
-    "text": "map_valley_floor\n\n\n\nmap_valley_floor_detailed\n\n\n\n\n\n\n\n\n\n\nprepare_inputs\nPrepare inputs for map_valley_floor using streamkit.\n\n\n\n\n\n\n\n\n\nParameters\n\n\n\nValleyFloorDetailed"
-  },
-  {
-    "objectID": "docs_source/reference/index.html#core",
-    "href": "docs_source/reference/index.html#core",
-    "title": "Function reference",
-    "section": "",
-    "text": "map_valley_floor\n\n\n\nmap_valley_floor_detailed"
-  },
-  {
-    "objectID": "docs_source/reference/index.html#inputs",
-    "href": "docs_source/reference/index.html#inputs",
-    "title": "Function reference",
-    "section": "",
-    "text": "prepare_inputs\nPrepare inputs for map_valley_floor using streamkit."
-  },
-  {
-    "objectID": "docs_source/reference/index.html#configuration",
-    "href": "docs_source/reference/index.html#configuration",
-    "title": "Function reference",
-    "section": "",
-    "text": "Parameters\n\n\n\nValleyFloorDetailed"
-  },
-  {
-    "objectID": "docs_source/reference/map_valley_floor.html",
-    "href": "docs_source/reference/map_valley_floor.html",
-    "title": "map_valley_floor",
-    "section": "",
-    "text": "map_valley_floor\nmap_valley_floor(dem, hand, channel_network, subbasins, params=None)"
-  },
-  {
-    "objectID": "docs_source/reference/PostprocessingParameters.html",
-    "href": "docs_source/reference/PostprocessingParameters.html",
-    "title": "PostprocessingParameters",
-    "section": "",
-    "text": "PostprocessingParameters(min_size=40000, max_slope=12.0)\nParameters for postprocessing the valley floor raster.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
-  },
-  {
-    "objectID": "docs_source/reference/PostprocessingParameters.html#attributes",
-    "href": "docs_source/reference/PostprocessingParameters.html#attributes",
-    "title": "PostprocessingParameters",
-    "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
-  },
-  {
-    "objectID": "docs_source/reference/postprocess.html",
-    "href": "docs_source/reference/postprocess.html",
-    "title": "postprocess",
-    "section": "",
-    "text": "postprocess\n\n\n\n\n\nName\nDescription\n\n\n\n\npostprocess\nPostprocess a valley floor raster.\n\n\n\n\n\npostprocess.postprocess(\n    floor,\n    channel_network,\n    dem,\n    params=PostprocessingParameters(),\n)\nPostprocess a valley floor raster.\nApplies three refinement steps in order: removes high-slope pixels, fills small holes, and removes areas not connected to the channel network. Channel network pixels are always included in the output.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfloor\nxr.DataArray\nBinary valley floor raster to refine (uint8, nodata=255). Typically the valley_floor output from delineate().\nrequired\n\n\nchannel_network\nxr.DataArray\nFull labeled stream network raster including headwaters, used for connectivity analysis.\nrequired\n\n\ndem\nxr.DataArray\nDigital elevation model, used to compute slope.\nrequired\n\n\nparams\nPostprocessingParameters\nPostprocessing parameters. Defaults to PostprocessingParameters().\nPostprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nRefined valley floor raster (uint8, nodata=255)."
-  },
-  {
-    "objectID": "docs_source/reference/postprocess.html#functions",
-    "href": "docs_source/reference/postprocess.html#functions",
-    "title": "postprocess",
-    "section": "",
-    "text": "Name\nDescription\n\n\n\n\npostprocess\nPostprocess a valley floor raster.\n\n\n\n\n\npostprocess.postprocess(\n    floor,\n    channel_network,\n    dem,\n    params=PostprocessingParameters(),\n)\nPostprocess a valley floor raster.\nApplies three refinement steps in order: removes high-slope pixels, fills small holes, and removes areas not connected to the channel network. Channel network pixels are always included in the output.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfloor\nxr.DataArray\nBinary valley floor raster to refine (uint8, nodata=255). Typically the valley_floor output from delineate().\nrequired\n\n\nchannel_network\nxr.DataArray\nFull labeled stream network raster including headwaters, used for connectivity analysis.\nrequired\n\n\ndem\nxr.DataArray\nDigital elevation model, used to compute slope.\nrequired\n\n\nparams\nPostprocessingParameters\nPostprocessing parameters. Defaults to PostprocessingParameters().\nPostprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nRefined valley floor raster (uint8, nodata=255)."
-  },
-  {
-    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html",
-    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html",
-    "title": "delineate_from_dem_and_flowlines",
-    "section": "",
-    "text": "delineate_from_dem_and_flowlines(\n    dem,\n    flowlines,\n    params=Parameters(),\n    preprocessing_params=PreprocessingParameters(),\n    postprocessing_params=None,\n)\nDelineate valley floors from a DEM and flowlines.\nRuns the full pipeline: preprocessing with streamkit to derive hydrological inputs, core delineation, and optionally postprocessing. This is the recommended entry point for users who do not have precomputed HAND, subbasins, or cross sections.\n\n\npip install “valley-floor[streamkit]”\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nParameters\nCore algorithm parameters. Defaults to Parameters().\nParameters()\n\n\npreprocessing_params\nPreprocessingParameters\nPreprocessing pipeline parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\npostprocessing_params\nPostprocessingParameters | None\nIf provided, postprocessing is applied to the valley floor raster. If None, the raw union of region and flood components is returned. Defaults to None.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Final valley floor raster (uint8, nodata=255). If postprocessing_params is provided this is the postprocessed result, otherwise the raw union of the two components. - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold. - channel_network: Full labeled stream network raster. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame)."
-  },
-  {
-    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#requires-the-streamkit-optional-dependency",
-    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#requires-the-streamkit-optional-dependency",
-    "title": "delineate_from_dem_and_flowlines",
-    "section": "",
-    "text": "pip install “valley-floor[streamkit]”"
-  },
-  {
-    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#parameters",
-    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#parameters",
-    "title": "delineate_from_dem_and_flowlines",
-    "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nParameters\nCore algorithm parameters. Defaults to Parameters().\nParameters()\n\n\npreprocessing_params\nPreprocessingParameters\nPreprocessing pipeline parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\npostprocessing_params\nPostprocessingParameters | None\nIf provided, postprocessing is applied to the valley floor raster. If None, the raw union of region and flood components is returned. Defaults to None.\nNone"
-  },
-  {
-    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#returns",
-    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#returns",
-    "title": "delineate_from_dem_and_flowlines",
-    "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Final valley floor raster (uint8, nodata=255). If postprocessing_params is provided this is the postprocessed result, otherwise the raw union of the two components. - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold. - channel_network: Full labeled stream network raster. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame)."
-  },
-  {
-    "objectID": "docs_source/reference/PreprocessingParameters.html",
-    "href": "docs_source/reference/PreprocessingParameters.html",
-    "title": "PreprocessingParameters",
-    "section": "",
-    "text": "PreprocessingParameters(\n    reach_penalty=5,\n    reach_min_length=1000,\n    reach_smooth_window=5,\n    reach_threshold_degrees=1.0,\n    headwater_min_catchment_area=1500000,\n    headwater_max_mean_slope=5.0,\n    xs_interval_distance=100,\n    xs_length=1500,\n    xs_point_spacing=10,\n)\nParameters for the streamkit-based preprocessing pipeline.\nControls reach segmentation, headwater filtering, and cross section generation. All spatial units are in the CRS units of the input DEM (typically meters).\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nreach_penalty\nint\nPELT algorithm penalty for reach segmentation. Higher values produce fewer, longer reaches.\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n\n\nheadwater_min_catchment_area\nint\nMinimum contributing area in square meters to retain a headwater reach.\n\n\nheadwater_max_mean_slope\nfloat\nMaximum mean slope in degrees for a headwater reach to be retained.\n\n\nxs_interval_distance\nint\nDistance between cross sections in meters.\n\n\nxs_length\nint\nTotal length of each cross section in meters.\n\n\nxs_point_spacing\nint\nDistance between sample points along each cross section in meters."
-  },
-  {
-    "objectID": "docs_source/reference/PreprocessingParameters.html#attributes",
-    "href": "docs_source/reference/PreprocessingParameters.html#attributes",
-    "title": "PreprocessingParameters",
-    "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\nreach_penalty\nint\nPELT algorithm penalty for reach segmentation. Higher values produce fewer, longer reaches.\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n\n\nheadwater_min_catchment_area\nint\nMinimum contributing area in square meters to retain a headwater reach.\n\n\nheadwater_max_mean_slope\nfloat\nMaximum mean slope in degrees for a headwater reach to be retained.\n\n\nxs_interval_distance\nint\nDistance between cross sections in meters.\n\n\nxs_length\nint\nTotal length of each cross section in meters.\n\n\nxs_point_spacing\nint\nDistance between sample points along each cross section in meters."
-  },
-  {
-    "objectID": "docs_source/reference/preprocess.html",
-    "href": "docs_source/reference/preprocess.html",
-    "title": "preprocess",
-    "section": "",
-    "text": "preprocess\n\n\n\n\n\nName\nDescription\n\n\n\n\npreprocess\nPrepare hydrological inputs for valley floor delineation using streamkit.\n\n\n\n\n\npreprocess.preprocess(dem, flowlines, params=PreprocessingParameters())\nPrepare hydrological inputs for valley floor delineation using streamkit.\nRuns the full preprocessing pipeline: channel head detection, flow routing, network extraction, reach segmentation, headwater pruning, subbasin delineation, HAND computation, and cross section generation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nPreprocessingParameters\nPreprocessing parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - channel_network: Full labeled stream network raster including headwaters. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame). - subbasins: Raster of subbasin labels, one per trunk reach. - hand: Height Above Nearest Drainage raster. - xs_coords: Cross section sample points as a GeoDataFrame."
-  },
-  {
-    "objectID": "docs_source/reference/preprocess.html#functions",
-    "href": "docs_source/reference/preprocess.html#functions",
-    "title": "preprocess",
-    "section": "",
-    "text": "Name\nDescription\n\n\n\n\npreprocess\nPrepare hydrological inputs for valley floor delineation using streamkit.\n\n\n\n\n\npreprocess.preprocess(dem, flowlines, params=PreprocessingParameters())\nPrepare hydrological inputs for valley floor delineation using streamkit.\nRuns the full preprocessing pipeline: channel head detection, flow routing, network extraction, reach segmentation, headwater pruning, subbasin delineation, HAND computation, and cross section generation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nPreprocessingParameters\nPreprocessing parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - channel_network: Full labeled stream network raster including headwaters. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame). - subbasins: Raster of subbasin labels, one per trunk reach. - hand: Height Above Nearest Drainage raster. - xs_coords: Cross section sample points as a GeoDataFrame."
-  },
-  {
-    "objectID": "docs_source/reference/Parameters.html",
-    "href": "docs_source/reference/Parameters.html",
-    "title": "Parameters",
-    "section": "",
-    "text": "Parameters\nParameters(\n    headwater_min_length=1000,\n    headwater_max_mean_slope=5.0,\n    region_smooth_sigma=90,\n    region_slope_threshold=3.0,\n    xs_interval_distance=100,\n    xs_length=1500,\n    xs_point_spacing=10,\n    flood_steep_slope=10.0,\n    flood_min_elevation_gain=10.0,\n    flood_default_hand=10,\n    flood_percentile=85.0,\n    flood_min_points=10,\n    min_hole_size=40000,\n    max_slope=15.0,\n)"
-  },
-  {
-    "objectID": "docs_source/reference/ValleyFloorDetailed.html",
-    "href": "docs_source/reference/ValleyFloorDetailed.html",
-    "title": "ValleyFloorDetailed",
-    "section": "",
-    "text": "ValleyFloorDetailed\nValleyFloorDetailed(\n    valley_floor,\n    region_floor,\n    flood_floor,\n    slope_break_pts,\n    reach_thresholds,\n)"
-  },
-  {
-    "objectID": "docs_source/reference/map_valley_floor_detailed.html",
-    "href": "docs_source/reference/map_valley_floor_detailed.html",
-    "title": "map_valley_floor_detailed",
-    "section": "",
-    "text": "map_valley_floor_detailed\nmap_valley_floor_detailed(dem, hand, channel_network, subbasins, params=None)"
-  },
-  {
-    "objectID": "docs_source/reference/delineate.html",
-    "href": "docs_source/reference/delineate.html",
-    "title": "delineate",
-    "section": "",
-    "text": "delineate(dem, hand, subbasins, xs_coords, channel_network, params=Parameters())\nDelineate valley floors from precomputed hydrological inputs.\nCombines two components: region growing from low-slope areas connected to the channel network, and reach flooding based on HAND thresholds derived from cross section analysis. Results from both components are unioned into a single valley floor raster.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nhand\nxr.DataArray\nHeight Above Nearest Drainage raster, aligned to dem.\nrequired\n\n\nsubbasins\nxr.DataArray\nRaster of subbasin labels, one per stream reach.\nrequired\n\n\nxs_coords\ngpd.GeoDataFrame\nCross section sample points as a GeoDataFrame with columns xs_id, distance, point_id, geometry, and interp_elevation.\nrequired\n\n\nchannel_network\nxr.DataArray\nLabeled stream network raster used for region growing connectivity. Typically the trunk network with headwaters removed.\nrequired\n\n\nparams\nParameters\nAlgorithm parameters. Defaults to Parameters().\nParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Union of region and flood components (uint8, nodata=255). - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold."
-  },
-  {
-    "objectID": "docs_source/reference/delineate.html#parameters",
-    "href": "docs_source/reference/delineate.html#parameters",
-    "title": "delineate",
-    "section": "",
-    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nhand\nxr.DataArray\nHeight Above Nearest Drainage raster, aligned to dem.\nrequired\n\n\nsubbasins\nxr.DataArray\nRaster of subbasin labels, one per stream reach.\nrequired\n\n\nxs_coords\ngpd.GeoDataFrame\nCross section sample points as a GeoDataFrame with columns xs_id, distance, point_id, geometry, and interp_elevation.\nrequired\n\n\nchannel_network\nxr.DataArray\nLabeled stream network raster used for region growing connectivity. Typically the trunk network with headwaters removed.\nrequired\n\n\nparams\nParameters\nAlgorithm parameters. Defaults to Parameters().\nParameters()"
-  },
-  {
-    "objectID": "docs_source/reference/delineate.html#returns",
-    "href": "docs_source/reference/delineate.html#returns",
-    "title": "delineate",
-    "section": "",
-    "text": "Name\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Union of region and flood components (uint8, nodata=255). - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold."
-  },
-  {
     "objectID": "docs_source/notebooks/example.html",
     "href": "docs_source/notebooks/example.html",
     "title": "Example",
@@ -264,5 +47,222 @@
     "title": "Example",
     "section": "Visualize results",
     "text": "Visualize results\n\nfloor_masked = result.valley_floor.where(result.valley_floor == 1)\n\nfig, ax = plt.subplots(figsize=(8, 6))\nhs.plot(ax=ax, cmap='Greys_r', add_colorbar=False)\nfloor_masked.plot(ax=ax, cmap='Reds', add_colorbar=False, alpha=0.6)\nax.set_title('Valley Floor')\nax.set_axis_off()\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\n\nregion_masked = result.region_floor.where(result.region_floor == 1)\nflood_masked = result.flood_floor.where(result.flood_floor == 1)\n\nfig, axes = plt.subplots(1, 2, figsize=(14, 6))\n\nhs.plot(ax=axes[0], cmap='Greys_r', add_colorbar=False)\nregion_masked.plot(ax=axes[0], cmap='Greens', add_colorbar=False, alpha=0.6)\naxes[0].set_title('Region Growing Component')\naxes[0].set_axis_off()\n\nhs.plot(ax=axes[1], cmap='Greys_r', add_colorbar=False)\nflood_masked.plot(ax=axes[1], cmap='Oranges', add_colorbar=False, alpha=0.6)\naxes[1].set_title('Reach Flooding Component')\naxes[1].set_axis_off()\nresult.slope_break_pts.plot(ax=axes[1], color='blue', markersize=1, alpha=0.5)\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "objectID": "docs_source/reference/preprocess.html",
+    "href": "docs_source/reference/preprocess.html",
+    "title": "preprocess",
+    "section": "",
+    "text": "preprocess\n\n\n\n\n\nName\nDescription\n\n\n\n\npreprocess\nPrepare hydrological inputs for valley floor delineation using streamkit.\n\n\n\n\n\npreprocess.preprocess(dem, flowlines, params=PreprocessingParameters())\nPrepare hydrological inputs for valley floor delineation using streamkit.\nRuns the full preprocessing pipeline: channel head detection, flow routing, network extraction, reach segmentation, headwater pruning, subbasin delineation, HAND computation, and cross section generation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nPreprocessingParameters\nPreprocessing parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - channel_network: Full labeled stream network raster including headwaters. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame). - subbasins: Raster of subbasin labels, one per trunk reach. - hand: Height Above Nearest Drainage raster. - xs_coords: Cross section sample points as a GeoDataFrame."
+  },
+  {
+    "objectID": "docs_source/reference/preprocess.html#functions",
+    "href": "docs_source/reference/preprocess.html#functions",
+    "title": "preprocess",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npreprocess\nPrepare hydrological inputs for valley floor delineation using streamkit.\n\n\n\n\n\npreprocess.preprocess(dem, flowlines, params=PreprocessingParameters())\nPrepare hydrological inputs for valley floor delineation using streamkit.\nRuns the full preprocessing pipeline: channel head detection, flow routing, network extraction, reach segmentation, headwater pruning, subbasin delineation, HAND computation, and cross section generation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nPreprocessingParameters\nPreprocessing parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - channel_network: Full labeled stream network raster including headwaters. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame). - subbasins: Raster of subbasin labels, one per trunk reach. - hand: Height Above Nearest Drainage raster. - xs_coords: Cross section sample points as a GeoDataFrame."
+  },
+  {
+    "objectID": "docs_source/reference/map_valley_floor.html",
+    "href": "docs_source/reference/map_valley_floor.html",
+    "title": "map_valley_floor",
+    "section": "",
+    "text": "map_valley_floor\nmap_valley_floor(dem, hand, channel_network, subbasins, params=None)"
+  },
+  {
+    "objectID": "docs_source/reference/PostprocessingParameters.html",
+    "href": "docs_source/reference/PostprocessingParameters.html",
+    "title": "PostprocessingParameters",
+    "section": "",
+    "text": "PostprocessingParameters(min_size=40000, max_slope=12.0)\nParameters for postprocessing the valley floor raster.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
+  },
+  {
+    "objectID": "docs_source/reference/PostprocessingParameters.html#attributes",
+    "href": "docs_source/reference/PostprocessingParameters.html#attributes",
+    "title": "PostprocessingParameters",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\nmin_size\nint\nHoles smaller than this size in square meters are filled in as valley floor.\n\n\nmax_slope\nfloat\nMaximum slope in degrees. Pixels exceeding this are excluded from the valley floor regardless of other criteria."
+  },
+  {
+    "objectID": "docs_source/reference/prepare_inputs.html",
+    "href": "docs_source/reference/prepare_inputs.html",
+    "title": "prepare_inputs",
+    "section": "",
+    "text": "prepare_inputs(\n    dem,\n    flowlines,\n    reach_penalty=5,\n    reach_min_length=1000,\n    reach_smooth_window=5,\n    reach_threshold_degrees=1.0,\n)\nPrepare inputs for map_valley_floor using streamkit.\nProduces dem, hand, channel_network, and subbasins from a raw DEM and vector flowlines. The returned dem is the original input — it is not hydrologically conditioned. HAND and subbasins are derived from a conditioned DEM internally.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nRaw digital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nVector stream network as a GeoDataFrame of LineStrings.\nrequired\n\n\nreach_penalty\nint\nPELT penalty for reach segmentation. Higher values produce fewer, longer reaches.\n5\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n1000\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n5\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n1.0\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nTuple of (dem, hand, channel_network, subbasins), ready to pass\n\n\n\nxr.DataArray\ndirectly to map_valley_floor."
+  },
+  {
+    "objectID": "docs_source/reference/prepare_inputs.html#parameters",
+    "href": "docs_source/reference/prepare_inputs.html#parameters",
+    "title": "prepare_inputs",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nRaw digital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nVector stream network as a GeoDataFrame of LineStrings.\nrequired\n\n\nreach_penalty\nint\nPELT penalty for reach segmentation. Higher values produce fewer, longer reaches.\n5\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n1000\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n5\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n1.0"
+  },
+  {
+    "objectID": "docs_source/reference/prepare_inputs.html#returns",
+    "href": "docs_source/reference/prepare_inputs.html#returns",
+    "title": "prepare_inputs",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nxr.DataArray\nTuple of (dem, hand, channel_network, subbasins), ready to pass\n\n\n\nxr.DataArray\ndirectly to map_valley_floor."
+  },
+  {
+    "objectID": "docs_source/reference/postprocess.html",
+    "href": "docs_source/reference/postprocess.html",
+    "title": "postprocess",
+    "section": "",
+    "text": "postprocess\n\n\n\n\n\nName\nDescription\n\n\n\n\npostprocess\nPostprocess a valley floor raster.\n\n\n\n\n\npostprocess.postprocess(\n    floor,\n    channel_network,\n    dem,\n    params=PostprocessingParameters(),\n)\nPostprocess a valley floor raster.\nApplies three refinement steps in order: removes high-slope pixels, fills small holes, and removes areas not connected to the channel network. Channel network pixels are always included in the output.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfloor\nxr.DataArray\nBinary valley floor raster to refine (uint8, nodata=255). Typically the valley_floor output from delineate().\nrequired\n\n\nchannel_network\nxr.DataArray\nFull labeled stream network raster including headwaters, used for connectivity analysis.\nrequired\n\n\ndem\nxr.DataArray\nDigital elevation model, used to compute slope.\nrequired\n\n\nparams\nPostprocessingParameters\nPostprocessing parameters. Defaults to PostprocessingParameters().\nPostprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nRefined valley floor raster (uint8, nodata=255)."
+  },
+  {
+    "objectID": "docs_source/reference/postprocess.html#functions",
+    "href": "docs_source/reference/postprocess.html#functions",
+    "title": "postprocess",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npostprocess\nPostprocess a valley floor raster.\n\n\n\n\n\npostprocess.postprocess(\n    floor,\n    channel_network,\n    dem,\n    params=PostprocessingParameters(),\n)\nPostprocess a valley floor raster.\nApplies three refinement steps in order: removes high-slope pixels, fills small holes, and removes areas not connected to the channel network. Channel network pixels are always included in the output.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfloor\nxr.DataArray\nBinary valley floor raster to refine (uint8, nodata=255). Typically the valley_floor output from delineate().\nrequired\n\n\nchannel_network\nxr.DataArray\nFull labeled stream network raster including headwaters, used for connectivity analysis.\nrequired\n\n\ndem\nxr.DataArray\nDigital elevation model, used to compute slope.\nrequired\n\n\nparams\nPostprocessingParameters\nPostprocessing parameters. Defaults to PostprocessingParameters().\nPostprocessingParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nxr.DataArray\nRefined valley floor raster (uint8, nodata=255)."
+  },
+  {
+    "objectID": "docs_source/reference/index.html",
+    "href": "docs_source/reference/index.html",
+    "title": "Function reference",
+    "section": "",
+    "text": "map_valley_floor\n\n\n\nmap_valley_floor_detailed\n\n\n\n\n\n\n\n\n\n\nprepare_inputs\nPrepare inputs for map_valley_floor using streamkit.\n\n\n\n\n\n\n\n\n\nParameters\n\n\n\nValleyFloorDetailed"
+  },
+  {
+    "objectID": "docs_source/reference/index.html#core",
+    "href": "docs_source/reference/index.html#core",
+    "title": "Function reference",
+    "section": "",
+    "text": "map_valley_floor\n\n\n\nmap_valley_floor_detailed"
+  },
+  {
+    "objectID": "docs_source/reference/index.html#inputs",
+    "href": "docs_source/reference/index.html#inputs",
+    "title": "Function reference",
+    "section": "",
+    "text": "prepare_inputs\nPrepare inputs for map_valley_floor using streamkit."
+  },
+  {
+    "objectID": "docs_source/reference/index.html#configuration",
+    "href": "docs_source/reference/index.html#configuration",
+    "title": "Function reference",
+    "section": "",
+    "text": "Parameters\n\n\n\nValleyFloorDetailed"
+  },
+  {
+    "objectID": "docs_source/reference/delineate.html",
+    "href": "docs_source/reference/delineate.html",
+    "title": "delineate",
+    "section": "",
+    "text": "delineate(dem, hand, subbasins, xs_coords, channel_network, params=Parameters())\nDelineate valley floors from precomputed hydrological inputs.\nCombines two components: region growing from low-slope areas connected to the channel network, and reach flooding based on HAND thresholds derived from cross section analysis. Results from both components are unioned into a single valley floor raster.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nhand\nxr.DataArray\nHeight Above Nearest Drainage raster, aligned to dem.\nrequired\n\n\nsubbasins\nxr.DataArray\nRaster of subbasin labels, one per stream reach.\nrequired\n\n\nxs_coords\ngpd.GeoDataFrame\nCross section sample points as a GeoDataFrame with columns xs_id, distance, point_id, geometry, and interp_elevation.\nrequired\n\n\nchannel_network\nxr.DataArray\nLabeled stream network raster used for region growing connectivity. Typically the trunk network with headwaters removed.\nrequired\n\n\nparams\nParameters\nAlgorithm parameters. Defaults to Parameters().\nParameters()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Union of region and flood components (uint8, nodata=255). - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold."
+  },
+  {
+    "objectID": "docs_source/reference/delineate.html#parameters",
+    "href": "docs_source/reference/delineate.html#parameters",
+    "title": "delineate",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nhand\nxr.DataArray\nHeight Above Nearest Drainage raster, aligned to dem.\nrequired\n\n\nsubbasins\nxr.DataArray\nRaster of subbasin labels, one per stream reach.\nrequired\n\n\nxs_coords\ngpd.GeoDataFrame\nCross section sample points as a GeoDataFrame with columns xs_id, distance, point_id, geometry, and interp_elevation.\nrequired\n\n\nchannel_network\nxr.DataArray\nLabeled stream network raster used for region growing connectivity. Typically the trunk network with headwaters removed.\nrequired\n\n\nparams\nParameters\nAlgorithm parameters. Defaults to Parameters().\nParameters()"
+  },
+  {
+    "objectID": "docs_source/reference/delineate.html#returns",
+    "href": "docs_source/reference/delineate.html#returns",
+    "title": "delineate",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Union of region and flood components (uint8, nodata=255). - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold."
+  },
+  {
+    "objectID": "docs_source/reference/Parameters.html",
+    "href": "docs_source/reference/Parameters.html",
+    "title": "Parameters",
+    "section": "",
+    "text": "Parameters\nParameters(\n    headwater_min_length=1000,\n    headwater_max_mean_slope=5.0,\n    region_smooth_sigma=90,\n    region_slope_threshold=3.0,\n    xs_interval_distance=100,\n    xs_length=1500,\n    xs_point_spacing=10,\n    flood_steep_slope=10.0,\n    flood_min_elevation_gain=10.0,\n    flood_default_hand=10,\n    flood_percentile=85.0,\n    flood_min_points=10,\n    min_hole_size=40000,\n    max_slope=15.0,\n)"
+  },
+  {
+    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html",
+    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html",
+    "title": "delineate_from_dem_and_flowlines",
+    "section": "",
+    "text": "delineate_from_dem_and_flowlines(\n    dem,\n    flowlines,\n    params=Parameters(),\n    preprocessing_params=PreprocessingParameters(),\n    postprocessing_params=None,\n)\nDelineate valley floors from a DEM and flowlines.\nRuns the full pipeline: preprocessing with streamkit to derive hydrological inputs, core delineation, and optionally postprocessing. This is the recommended entry point for users who do not have precomputed HAND, subbasins, or cross sections.\n\n\npip install “valley-floor[streamkit]”\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nParameters\nCore algorithm parameters. Defaults to Parameters().\nParameters()\n\n\npreprocessing_params\nPreprocessingParameters\nPreprocessing pipeline parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\npostprocessing_params\nPostprocessingParameters | None\nIf provided, postprocessing is applied to the valley floor raster. If None, the raw union of region and flood components is returned. Defaults to None.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Final valley floor raster (uint8, nodata=255). If postprocessing_params is provided this is the postprocessed result, otherwise the raw union of the two components. - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold. - channel_network: Full labeled stream network raster. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame)."
+  },
+  {
+    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#requires-the-streamkit-optional-dependency",
+    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#requires-the-streamkit-optional-dependency",
+    "title": "delineate_from_dem_and_flowlines",
+    "section": "",
+    "text": "pip install “valley-floor[streamkit]”"
+  },
+  {
+    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#parameters",
+    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#parameters",
+    "title": "delineate_from_dem_and_flowlines",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndem\nxr.DataArray\nDigital elevation model.\nrequired\n\n\nflowlines\ngpd.GeoDataFrame\nStream network as a GeoDataFrame of directed LineStrings, from upstream to downstream.\nrequired\n\n\nparams\nParameters\nCore algorithm parameters. Defaults to Parameters().\nParameters()\n\n\npreprocessing_params\nPreprocessingParameters\nPreprocessing pipeline parameters. Defaults to PreprocessingParameters().\nPreprocessingParameters()\n\n\npostprocessing_params\nPostprocessingParameters | None\nIf provided, postprocessing is applied to the valley floor raster. If None, the raw union of region and flood components is returned. Defaults to None.\nNone"
+  },
+  {
+    "objectID": "docs_source/reference/delineate_from_dem_and_flowlines.html#returns",
+    "href": "docs_source/reference/delineate_from_dem_and_flowlines.html#returns",
+    "title": "delineate_from_dem_and_flowlines",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\ndict\nDictionary with keys: - valley_floor: Final valley floor raster (uint8, nodata=255). If postprocessing_params is provided this is the postprocessed result, otherwise the raw union of the two components. - region_floor: Output of the region growing component. - flood_floor: Output of the reach flooding component. - slope_break_pts: GeoDataFrame of detected valley wall points. - reach_thresholds: Dict mapping subbasin ID to HAND threshold. - channel_network: Full labeled stream network raster. - channel_network_gdf: Full stream network as a GeoDataFrame. - trunk_network: Stream network with headwaters removed (raster). - trunk_network_gdf: Stream network with headwaters removed (GeoDataFrame)."
+  },
+  {
+    "objectID": "docs_source/reference/map_valley_floor_detailed.html",
+    "href": "docs_source/reference/map_valley_floor_detailed.html",
+    "title": "map_valley_floor_detailed",
+    "section": "",
+    "text": "map_valley_floor_detailed\nmap_valley_floor_detailed(dem, hand, channel_network, subbasins, params=None)"
+  },
+  {
+    "objectID": "docs_source/reference/ValleyFloorDetailed.html",
+    "href": "docs_source/reference/ValleyFloorDetailed.html",
+    "title": "ValleyFloorDetailed",
+    "section": "",
+    "text": "ValleyFloorDetailed\nValleyFloorDetailed(\n    valley_floor,\n    region_floor,\n    flood_floor,\n    slope_break_pts,\n    reach_thresholds,\n)"
+  },
+  {
+    "objectID": "docs_source/reference/PreprocessingParameters.html",
+    "href": "docs_source/reference/PreprocessingParameters.html",
+    "title": "PreprocessingParameters",
+    "section": "",
+    "text": "PreprocessingParameters(\n    reach_penalty=5,\n    reach_min_length=1000,\n    reach_smooth_window=5,\n    reach_threshold_degrees=1.0,\n    headwater_min_catchment_area=1500000,\n    headwater_max_mean_slope=5.0,\n    xs_interval_distance=100,\n    xs_length=1500,\n    xs_point_spacing=10,\n)\nParameters for the streamkit-based preprocessing pipeline.\nControls reach segmentation, headwater filtering, and cross section generation. All spatial units are in the CRS units of the input DEM (typically meters).\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nreach_penalty\nint\nPELT algorithm penalty for reach segmentation. Higher values produce fewer, longer reaches.\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n\n\nheadwater_min_catchment_area\nint\nMinimum contributing area in square meters to retain a headwater reach.\n\n\nheadwater_max_mean_slope\nfloat\nMaximum mean slope in degrees for a headwater reach to be retained.\n\n\nxs_interval_distance\nint\nDistance between cross sections in meters.\n\n\nxs_length\nint\nTotal length of each cross section in meters.\n\n\nxs_point_spacing\nint\nDistance between sample points along each cross section in meters."
+  },
+  {
+    "objectID": "docs_source/reference/PreprocessingParameters.html#attributes",
+    "href": "docs_source/reference/PreprocessingParameters.html#attributes",
+    "title": "PreprocessingParameters",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\nreach_penalty\nint\nPELT algorithm penalty for reach segmentation. Higher values produce fewer, longer reaches.\n\n\nreach_min_length\nint\nMinimum reach length in meters.\n\n\nreach_smooth_window\nint\nWindow size for smoothing slope before segmentation.\n\n\nreach_threshold_degrees\nfloat\nMerge adjacent reaches if slope difference is below this threshold in degrees.\n\n\nheadwater_min_catchment_area\nint\nMinimum contributing area in square meters to retain a headwater reach.\n\n\nheadwater_max_mean_slope\nfloat\nMaximum mean slope in degrees for a headwater reach to be retained.\n\n\nxs_interval_distance\nint\nDistance between cross sections in meters.\n\n\nxs_length\nint\nTotal length of each cross section in meters.\n\n\nxs_point_spacing\nint\nDistance between sample points along each cross section in meters."
+  },
+  {
+    "objectID": "docs_source/index.html",
+    "href": "docs_source/index.html",
+    "title": "vhs (Valley Hillslope Separator)",
+    "section": "",
+    "text": "A Python package for delineating valley floors from digital elevation models (DEMs).\nDocumentation: https://avkoehl.github.io/valley-floor/\nValley floors are the topographic region between valley walls shaped mainly by fluvial processes, composed of floodplains, terraces, alluvial fans, and channels.\nThe method combines two components:\n\nRegion growing — low-slope pixels connected to the channel network. Captures wider, unconfined valley floors with multiple channels and floodplains.\nReach flooding — reach-specific relative elevation thresholds derived from cross-section analysis. Captures narrow, confined valley floors bounded by steep hillslopes.\n\n\n\nCore package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\"\n\n\n\n\n\nIf you have your own HAND, channel network, and subbasins:\nfrom vhs import map_valley_floor, Parameters\n\n# all four inputs are xarray.DataArrays on the same grid\nvalley_floor = map_valley_floor(\n    dem=dem,\n    hand=hand,\n    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins\n    subbasins=subbasins,\n    params=Parameters(),              # optional, defaults shown\n)\n# valley_floor is an xarray.DataArray (uint8, nodata=255)\nFor access to intermediate outputs (region floor, flood floor, slope break points, per-reach HAND thresholds):\nfrom vhs import map_valley_floor_detailed\n\nresult = map_valley_floor_detailed(dem, hand, channel_network, subbasins)\nresult.valley_floor       # final binary raster\nresult.region_floor       # region growing component\nresult.flood_floor        # reach flooding component\nresult.slope_break_pts    # GeoDataFrame of detected valley wall points\nresult.reach_thresholds   # dict of {reach_id: HAND threshold}\n\n\n\nIf you have a raw DEM and vector flowlines, prepare_inputs runs a streamkit-based workflow to produce the four required inputs:\nfrom vhs import map_valley_floor, prepare_inputs\n\ndem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins)\n\n\n\nfrom vhs import Parameters\n\nparams = Parameters(\n    region_slope_threshold=2.0,   # degrees, tighter region growing\n    flood_percentile=90.0,        # higher HAND threshold per reach\n    min_hole_size=20_000,         # m², smaller holes filled\n)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)\n\n\n\n\nInstall the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview\n\n\n\nArthur Koehl — avkoehl at ucdavis.edu"
+  },
+  {
+    "objectID": "docs_source/index.html#installation",
+    "href": "docs_source/index.html#installation",
+    "title": "vhs (Valley Hillslope Separator)",
+    "section": "",
+    "text": "Core package:\npip install \"valley-floor @ git+https://github.com/avkoehl/valley-floor.git\"\nWith the optional preprocessing pipeline and example dataset (requires streamkit):\npip install \"valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git\""
+  },
+  {
+    "objectID": "docs_source/index.html#usage",
+    "href": "docs_source/index.html#usage",
+    "title": "vhs (Valley Hillslope Separator)",
+    "section": "",
+    "text": "If you have your own HAND, channel network, and subbasins:\nfrom vhs import map_valley_floor, Parameters\n\n# all four inputs are xarray.DataArrays on the same grid\nvalley_floor = map_valley_floor(\n    dem=dem,\n    hand=hand,\n    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins\n    subbasins=subbasins,\n    params=Parameters(),              # optional, defaults shown\n)\n# valley_floor is an xarray.DataArray (uint8, nodata=255)\nFor access to intermediate outputs (region floor, flood floor, slope break points, per-reach HAND thresholds):\nfrom vhs import map_valley_floor_detailed\n\nresult = map_valley_floor_detailed(dem, hand, channel_network, subbasins)\nresult.valley_floor       # final binary raster\nresult.region_floor       # region growing component\nresult.flood_floor        # reach flooding component\nresult.slope_break_pts    # GeoDataFrame of detected valley wall points\nresult.reach_thresholds   # dict of {reach_id: HAND threshold}\n\n\n\nIf you have a raw DEM and vector flowlines, prepare_inputs runs a streamkit-based workflow to produce the four required inputs:\nfrom vhs import map_valley_floor, prepare_inputs\n\ndem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins)\n\n\n\nfrom vhs import Parameters\n\nparams = Parameters(\n    region_slope_threshold=2.0,   # degrees, tighter region growing\n    flood_percentile=90.0,        # higher HAND threshold per reach\n    min_hole_size=20_000,         # m², smaller holes filled\n)\nvalley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)"
+  },
+  {
+    "objectID": "docs_source/index.html#developement",
+    "href": "docs_source/index.html#developement",
+    "title": "vhs (Valley Hillslope Separator)",
+    "section": "",
+    "text": "Install the package with development dependencies and register the package’s virtual environment as a Jupyter kernel:\ngit clone git@github.com:avkoehl/valley-floor.git\ncd valley-floor\nuv sync                        # core only\nuv sync --extra streamkit --group dev  # include streamkit and development dependencies\nuv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel\nRun tests with pytest:\nuv run pytest -v\nBuild the documentation and preview it locally:\nuv run quartodoc build\nquarto preview"
+  },
+  {
+    "objectID": "docs_source/index.html#contact",
+    "href": "docs_source/index.html#contact",
+    "title": "vhs (Valley Hillslope Separator)",
+    "section": "",
+    "text": "Arthur Koehl — avkoehl at ucdavis.edu"
   }
 ]
