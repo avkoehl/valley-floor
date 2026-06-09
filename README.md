@@ -29,12 +29,12 @@ pip install "valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-flo
 
 ## Usage
 
-### Core usage — BYO hydrology
+### Core usage 
 
 If you have your own HAND, channel network, and subbasins:
 
 ```python
-from valley_floor import map_valley_floor, Parameters
+from vhs import map_valley_floor, Parameters
 
 # all four inputs are xarray.DataArrays on the same grid
 valley_floor = map_valley_floor(
@@ -51,7 +51,7 @@ For access to intermediate outputs (region floor, flood floor, slope break point
 per-reach HAND thresholds):
 
 ```python
-from valley_floor import map_valley_floor_detailed
+from vhs import map_valley_floor_detailed
 
 result = map_valley_floor_detailed(dem, hand, channel_network, subbasins)
 result.valley_floor       # final binary raster
@@ -67,7 +67,7 @@ If you have a raw DEM and vector flowlines, `prepare_inputs` runs a streamkit-ba
 workflow to produce the four required inputs:
 
 ```python
-from valley_floor import map_valley_floor, prepare_inputs
+from vhs import map_valley_floor, prepare_inputs
 
 dem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)
 valley_floor = map_valley_floor(dem, hand, channel_network, subbasins)
@@ -76,7 +76,7 @@ valley_floor = map_valley_floor(dem, hand, channel_network, subbasins)
 ### Tuning parameters
 
 ```python
-from valley_floor import Parameters
+from vhs import Parameters
 
 params = Parameters(
     region_slope_threshold=2.0,   # degrees, tighter region growing
