@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>parameters – valley-floor</title>
+<title>parameters – vhs</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -74,10 +74,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-244ce1b9ec229af56bb6f90d24b3371d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-b9c91b1e117c879de662b9ae260051b4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">valley-floor</span>
+    <span class="navbar-title">vhs</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -163,87 +163,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="valley_floor.Parameters" class="level1">
+<section id="vhs.Parameters" class="level1">
 <h1>Parameters</h1>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Parameters(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    region_smooth_radius<span class="op">=</span><span class="dv">90</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    region_smooth_sigma<span class="op">=</span><span class="dv">30</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    region_slope_threshold<span class="op">=</span><span class="fl">3.0</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    region_dilation_radius<span class="op">=</span><span class="dv">3</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    flood_steep_slope<span class="op">=</span><span class="fl">10.0</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    flood_min_elevation_gain<span class="op">=</span><span class="fl">10.0</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    flood_default_elevation<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    flood_percentile<span class="op">=</span><span class="fl">85.0</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    flood_min_points<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Parameters for the core valley floor delineation algorithm.</p>
-<p>Controls the region growing and reach flooding components. All spatial units are in the CRS units of the input DEM (typically meters).</p>
-<section id="attributes" class="level2 doc-section doc-section-attributes">
-<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 17%">
-<col style="width: 5%">
-<col style="width: 77%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>region_smooth_radius</td>
-<td>int</td>
-<td>Radius of the Gaussian smoothing kernel in meters, applied to the DEM before slope calculation in region growing.</td>
-</tr>
-<tr class="even">
-<td>region_smooth_sigma</td>
-<td>int</td>
-<td>Standard deviation of the Gaussian smoothing kernel in pixels.</td>
-</tr>
-<tr class="odd">
-<td>region_slope_threshold</td>
-<td>float</td>
-<td>Maximum slope in degrees for a pixel to be included in the region growing component.</td>
-</tr>
-<tr class="even">
-<td>region_dilation_radius</td>
-<td>int</td>
-<td>Radius in pixels for dilating the channel network before region growing connectivity analysis.</td>
-</tr>
-<tr class="odd">
-<td>flood_steep_slope</td>
-<td>float</td>
-<td>Minimum slope in degrees to identify a valley wall in cross section analysis.</td>
-</tr>
-<tr class="even">
-<td>flood_min_elevation_gain</td>
-<td>float</td>
-<td>Minimum elevation gain in meters for a steep segment to be considered a valley wall.</td>
-</tr>
-<tr class="odd">
-<td>flood_default_elevation</td>
-<td>int</td>
-<td>Default HAND threshold in meters applied to reaches with insufficient cross section data.</td>
-</tr>
-<tr class="even">
-<td>flood_percentile</td>
-<td>float</td>
-<td>Percentile of slope break elevations used to derive the HAND threshold per reach.</td>
-</tr>
-<tr class="odd">
-<td>flood_min_points</td>
-<td>int</td>
-<td>Minimum number of slope break points required to derive a reach threshold from data rather than the default.</td>
-</tr>
-</tbody>
-</table>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    headwater_min_length<span class="op">=</span><span class="dv">1000</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    headwater_max_mean_slope<span class="op">=</span><span class="fl">5.0</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    region_smooth_sigma<span class="op">=</span><span class="dv">90</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    region_slope_threshold<span class="op">=</span><span class="fl">3.0</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    xs_interval_distance<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    xs_length<span class="op">=</span><span class="dv">1500</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    xs_point_spacing<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    flood_steep_slope<span class="op">=</span><span class="fl">10.0</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    flood_min_elevation_gain<span class="op">=</span><span class="fl">10.0</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    flood_default_hand<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    flood_percentile<span class="op">=</span><span class="fl">85.0</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    flood_min_points<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    min_hole_size<span class="op">=</span><span class="dv">40000</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    max_slope<span class="op">=</span><span class="fl">15.0</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
