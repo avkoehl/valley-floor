@@ -4,25 +4,18 @@
 
 | | |
 | --- | --- |
-| [delineate](delineate.qmd#valley_floor.delineate) | Delineate valley floors from precomputed hydrological inputs. |
-| [delineate_from_dem_and_flowlines](delineate_from_dem_and_flowlines.qmd#valley_floor.delineate_from_dem_and_flowlines) | Delineate valley floors from a DEM and flowlines. |
-
-## Postprocessing
-
-| | |
-| --- | --- |
-| [postprocess](postprocess.qmd#valley_floor.postprocess) |  |
+| [map_valley_floor](map_valley_floor.qmd#valley_floor.map_valley_floor) |  |
+| [map_valley_floor_detailed](map_valley_floor_detailed.qmd#valley_floor.map_valley_floor_detailed) |  |
 
 ## Inputs
 
 | | |
 | --- | --- |
-| [prepare_inputs](prepare_inputs.qmd#valley_floor.prepare_inputs) | Prepare hydrological inputs for valley floor delineation using streamkit. |
+| [prepare_inputs](prepare_inputs.qmd#valley_floor.prepare_inputs) | Optional streamkit-based workflow for preparing inputs to map_valley_floor. |
 
-## Parameters
+## Configuration
 
 | | |
 | --- | --- |
-| [Parameters](Parameters.qmd#valley_floor.Parameters) | Parameters for the core valley floor delineation algorithm. |
-| [PreprocessingParameters](PreprocessingParameters.qmd#valley_floor.PreprocessingParameters) | Parameters for the streamkit-based preprocessing pipeline. |
-| [PostprocessingParameters](PostprocessingParameters.qmd#valley_floor.PostprocessingParameters) | Parameters for postprocessing the valley floor raster. |
+| [Parameters](Parameters.qmd#valley_floor.Parameters) |  |
+| [ValleyFloorDetailed](ValleyFloorDetailed.qmd#valley_floor.ValleyFloorDetailed) |  |

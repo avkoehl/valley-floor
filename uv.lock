@@ -3326,7 +3326,7 @@ wheels = [
 ]
 
 [[package]]
-name = "valley-floor"
+name = "vhs"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -3335,6 +3335,7 @@ dependencies = [
     { name = "rioxarray" },
     { name = "scikit-image" },
     { name = "scipy" },
+    { name = "shapelysmooth" },
     { name = "xarray" },
     { name = "xarray-spatial" },
 ]
@@ -3361,6 +3362,7 @@ requires-dist = [
     { name = "rioxarray", specifier = ">=0.19.0" },
     { name = "scikit-image", specifier = ">=0.25.0" },
     { name = "scipy", specifier = ">=1.16.0" },
+    { name = "shapelysmooth", specifier = ">=0.2.1" },
     { name = "streamkit", extras = ["datasets", "segmentation"], marker = "extra == 'streamkit'", git = "https://github.com/avkoehl/streamkit.git" },
     { name = "xarray", specifier = ">=2025.1.0" },
     { name = "xarray-spatial", specifier = ">=0.4.0" },

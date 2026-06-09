@@ -3,7 +3,7 @@ project:
   output-dir: _site
 
 website:
-  title: "valley-floor"
+  title: "vhs"
   repo-url: https://github.com/avkoehl/valley-floor
   repo-actions: [issue]
   navbar:
@@ -19,22 +19,18 @@ website:
         href: docs_source/reference/index.qmd
 
 quartodoc:
-  package: valley_floor
+  package: vhs
   dir: docs_source/reference
   parser: google
   sections:
     - title: Core
       contents:
-        - delineate
-        - delineate_from_dem_and_flowlines
-    - title: Postprocessing
-      contents:
-        - postprocess
+        - map_valley_floor
+        - map_valley_floor_detailed
     - title: Inputs
       contents:
         - prepare_inputs
-    - title: Parameters
+    - title: Configuration
       contents:
         - Parameters
-        - PreprocessingParameters
-        - PostprocessingParameters
+        - ValleyFloorDetailed

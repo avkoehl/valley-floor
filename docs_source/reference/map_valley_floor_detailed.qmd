@@ -1,0 +1,6 @@
+# map_valley_floor_detailed { #valley_floor.map_valley_floor_detailed }
+
+```python
+map_valley_floor_detailed(dem, hand, channel_network, subbasins, params=None)
+```
+

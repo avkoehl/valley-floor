@@ -2,33 +2,20 @@
 
 ```python
 Parameters(
-    region_smooth_radius=90,
+    headwater_min_length=1000,
+    headwater_max_mean_slope=5.0,
     region_smooth_sigma=30,
     region_slope_threshold=3.0,
-    region_dilation_radius=3,
+    xs_interval_distance=100,
+    xs_length=1500,
+    xs_point_spacing=10,
     flood_steep_slope=10.0,
     flood_min_elevation_gain=10.0,
-    flood_default_elevation=10,
+    flood_default_hand=10,
     flood_percentile=85.0,
     flood_min_points=10,
+    min_hole_size=40000,
+    max_slope=15.0,
 )
 ```
 
-Parameters for the core valley floor delineation algorithm.
-
-Controls the region growing and reach flooding components.
-All spatial units are in the CRS units of the input DEM (typically meters).
-
-## Attributes {.doc-section .doc-section-attributes}
-
-| Name                     | Type   | Description                                                                                                       |
-|--------------------------|--------|-------------------------------------------------------------------------------------------------------------------|
-| region_smooth_radius     | int    | Radius of the Gaussian smoothing kernel in meters, applied to the DEM before slope calculation in region growing. |
-| region_smooth_sigma      | int    | Standard deviation of the Gaussian smoothing kernel in pixels.                                                    |
-| region_slope_threshold   | float  | Maximum slope in degrees for a pixel to be included in the region growing component.                              |
-| region_dilation_radius   | int    | Radius in pixels for dilating the channel network before region growing connectivity analysis.                    |
-| flood_steep_slope        | float  | Minimum slope in degrees to identify a valley wall in cross section analysis.                                     |
-| flood_min_elevation_gain | float  | Minimum elevation gain in meters for a steep segment to be considered a valley wall.                              |
-| flood_default_elevation  | int    | Default HAND threshold in meters applied to reaches with insufficient cross section data.                         |
-| flood_percentile         | float  | Percentile of slope break elevations used to derive the HAND threshold per reach.                                 |
-| flood_min_points         | int    | Minimum number of slope break points required to derive a reach threshold from data rather than the default.      |

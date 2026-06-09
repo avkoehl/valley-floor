@@ -1,0 +1,12 @@
+# ValleyFloorDetailed { #valley_floor.ValleyFloorDetailed }
+
+```python
+ValleyFloorDetailed(
+    valley_floor,
+    region_floor,
+    flood_floor,
+    slope_break_pts,
+    reach_thresholds,
+)
+```
+

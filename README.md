@@ -1,4 +1,4 @@
-# valley-floor
+# vhs (Valley Hillslope Separator)
 
 A Python package for delineating valley floors from digital elevation models (DEMs).
 
@@ -29,24 +29,61 @@ pip install "valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-flo
 
 ## Usage
 
-Basic usage:
-```python
-from valley_floor import (
-    Parameters, 
-    PreProcessingParameters,
-    PostProcessingParameters,
-    delineate_from_dem_and_flowlines
-)
+### Core usage — BYO hydrology
 
-# dem is an xarray.DataArray of elevation values
-# flowlines is a gpd.GeoDataFrame of flowline geometries 
-result = delineate_from_dem_and_flowlines(
+If you have your own HAND, channel network, and subbasins:
+
+```python
+from valley_floor import map_valley_floor, Parameters
+
+# all four inputs are xarray.DataArrays on the same grid
+valley_floor = map_valley_floor(
     dem=dem,
-    flowlines=flowlines,
-    params=Parameters(),
-    preprocessing_params=PreProcessingParameters(),
-    postprocessing_params=PostProcessingParameters()
+    hand=hand,
+    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins
+    subbasins=subbasins,
+    params=Parameters(),              # optional, defaults shown
 )
+# valley_floor is an xarray.DataArray (uint8, nodata=255)
+```
+
+For access to intermediate outputs (region floor, flood floor, slope break points,
+per-reach HAND thresholds):
+
+```python
+from valley_floor import map_valley_floor_detailed
+
+result = map_valley_floor_detailed(dem, hand, channel_network, subbasins)
+result.valley_floor       # final binary raster
+result.region_floor       # region growing component
+result.flood_floor        # reach flooding component
+result.slope_break_pts    # GeoDataFrame of detected valley wall points
+result.reach_thresholds   # dict of {reach_id: HAND threshold}
+```
+
+### Convenience usage — with streamkit
+
+If you have a raw DEM and vector flowlines, `prepare_inputs` runs a streamkit-based
+workflow to produce the four required inputs:
+
+```python
+from valley_floor import map_valley_floor, prepare_inputs
+
+dem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)
+valley_floor = map_valley_floor(dem, hand, channel_network, subbasins)
+```
+
+### Tuning parameters
+
+```python
+from valley_floor import Parameters
+
+params = Parameters(
+    region_slope_threshold=2.0,   # degrees, tighter region growing
+    flood_percentile=90.0,        # higher HAND threshold per reach
+    min_hole_size=20_000,         # m², smaller holes filled
+)
+valley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)
 ```
 
 ## Developement
