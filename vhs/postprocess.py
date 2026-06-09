@@ -36,5 +36,5 @@ def _close_holes(floor: xr.DataArray, min_hole_size: float) -> xr.DataArray:
     resolution = floor.rio.resolution()[0]
     num_cells = int(min_hole_size / resolution**2)
     filled = floor.copy(deep=True)
-    filled.data = remove_small_holes(filled.data, area_threshold=num_cells)
+    filled.data = remove_small_holes(filled.data, max_size=num_cells)
     return filled

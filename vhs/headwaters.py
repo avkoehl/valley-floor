@@ -13,9 +13,6 @@ def filter_headwaters(
     network_gdf = raster_network_to_vector(channel_network)
     tip_ids = _identify_tips(channel_network, dem, network_gdf)
 
-    n_reaches = len(network_gdf)
-    print(f"reaches: {n_reaches}, tips: {len(tip_ids)}")
-
     headwater_ids = []
     for stream_id in tip_ids:
         reach = network_gdf[network_gdf["stream_id"] == stream_id].iloc[0]
@@ -26,8 +23,6 @@ def filter_headwaters(
         slope = _mean_slope(channel_network, dem, stream_id, length)
         if slope > params.headwater_max_mean_slope:
             headwater_ids.append(stream_id)
-
-    print(f"headwaters filtered: {len(headwater_ids)}")
 
     filtered = channel_network.copy(deep=True)
     for sid in headwater_ids:
