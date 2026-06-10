@@ -21,6 +21,7 @@ def flood_reaches(
     )
     reach_thresholds, slope_break_pts = _derive_reach_thresholds(
         slope_break_pts,
+        channel_network,
         hand,
         subbasins,
         params.flood_default_hand,
@@ -79,6 +80,7 @@ def _detect_slope_breaks(
 
 def _derive_reach_thresholds(
     slope_break_pts: gpd.GeoDataFrame,
+    channel_network: xr.DataArray,
     hand: xr.DataArray,
     subbasins: xr.DataArray,
     default_hand: float,
@@ -91,37 +93,41 @@ def _derive_reach_thresholds(
         return median + 3 * mad
 
     pts = slope_break_pts.copy()
-    x = xr.DataArray(pts.geometry.x.values, dims="points")
-    y = xr.DataArray(pts.geometry.y.values, dims="points")
-    pts["subbasin"] = subbasins.sel(x=x, y=y, method="nearest").values
-    pts["hand_value"] = hand.sel(x=x, y=y, method="nearest").values
+    if not pts.empty:
+        x = xr.DataArray(pts.geometry.x.values, dims="points")
+        y = xr.DataArray(pts.geometry.y.values, dims="points")
+        pts["subbasin"] = subbasins.sel(x=x, y=y, method="nearest").values
+        pts["hand_value"] = hand.sel(x=x, y=y, method="nearest").values
 
     reach_thresholds = {}
     pts["is_outlier"] = False
-    for subbasin_id, group in pts.groupby("subbasin"):
-        if np.isnan(subbasin_id) or subbasin_id == 0:
-            continue
-        values = group["hand_value"].values
-        values = values[np.isfinite(values)]
-        if len(values) >= min_points:
-            cutoff = _mad_cutoff(values)
-            is_outlier = group["hand_value"] > cutoff
-            pts.loc[is_outlier.index[is_outlier], "is_outlier"] = True
-            values = values[values <= cutoff]
-            threshold = (
-                np.percentile(values, percentile)
-                if len(values) >= min_points
-                else default_hand
-            )
-        else:
-            threshold = default_hand
-        reach_thresholds[subbasin_id] = threshold
+    if not pts.empty:
+        for subbasin_id, group in pts.groupby("subbasin"):
+            if np.isnan(subbasin_id) or subbasin_id == 0:
+                continue
+            values = group["hand_value"].values
+            values = values[np.isfinite(values)]
+            if len(values) >= min_points:
+                cutoff = _mad_cutoff(values)
+                is_outlier = group["hand_value"] > cutoff
+                pts.loc[is_outlier.index[is_outlier], "is_outlier"] = True
+                values = values[values <= cutoff]
+                threshold = (
+                    np.percentile(values, percentile)
+                    if len(values) >= min_points
+                    else default_hand
+                )
+            else:
+                threshold = default_hand
+            reach_thresholds[subbasin_id] = threshold
 
-    for subbasin_id in np.unique(subbasins.values):
-        if subbasin_id == 0 or np.isnan(subbasin_id):
-            continue
-        if subbasin_id not in reach_thresholds:
-            reach_thresholds[int(subbasin_id)] = default_hand
+    # only assign default threshold to subbasins with an active reach
+    active_reach_ids = set(
+        int(v) for v in np.unique(channel_network.values) if v != 0 and np.isfinite(v)
+    )
+    for reach_id in active_reach_ids:
+        if reach_id not in reach_thresholds:
+            reach_thresholds[reach_id] = default_hand
 
     return reach_thresholds, pts
 
