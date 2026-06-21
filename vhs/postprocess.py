@@ -13,7 +13,7 @@ def postprocess(
     dem: xr.DataArray,
     params: Parameters,
 ) -> xr.DataArray:
-    slope = compute_slope(dem)
+    slope = compute_slope(dem, boundary="reflect")
 
     floor = floor.copy(deep=True)
     floor.data[slope.data > params.max_slope] = 0

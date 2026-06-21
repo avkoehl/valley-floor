@@ -13,7 +13,7 @@ def grow_region(
     smooth_sigma: float,
 ) -> xr.DataArray:
     smoothed = _smooth_raster(dem, smooth_sigma)
-    slope = compute_slope(smoothed)
+    slope = compute_slope(smoothed, boundary="reflect")
 
     binary = slope < slope_threshold
     floor = remove_isolated_areas(binary, channel_network)
