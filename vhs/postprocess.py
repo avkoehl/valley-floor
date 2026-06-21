@@ -25,7 +25,7 @@ def postprocess(
     floor = remove_isolated_areas(floor, channel_network)
     floor.data[channel_network.data > 0] = 1
     floor = floor.astype(np.uint8)
-    floor.data[np.isnan(slope.data)] = 255
+    floor.data[np.isnan(dem.data)] = 255
     floor = floor.rio.write_nodata(255)
     floor = floor.rio.set_nodata(255)
     floor.attrs["_FillValue"] = 255
