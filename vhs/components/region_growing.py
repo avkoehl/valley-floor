@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from xrspatial import slope as compute_slope
 import xarray as xr
 
 from vhs.utils import remove_isolated_areas
+from vhs.utils import calculate_slope
 
 
 def grow_region(
@@ -13,7 +13,7 @@ def grow_region(
     smooth_sigma: float,
 ) -> xr.DataArray:
     smoothed = _smooth_raster(dem, smooth_sigma)
-    slope = compute_slope(smoothed, boundary="reflect")
+    slope = calculate_slope(smoothed)
 
     binary = slope < slope_threshold
     floor = remove_isolated_areas(binary, channel_network)

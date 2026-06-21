@@ -1,10 +1,10 @@
 import numpy as np
 import xarray as xr
 from skimage.morphology import remove_small_holes
-from xrspatial import slope as compute_slope
 
 from vhs.config import Parameters
 from vhs.utils import remove_isolated_areas
+from vhs.utils import calculate_slope
 
 
 def postprocess(
@@ -13,7 +13,7 @@ def postprocess(
     dem: xr.DataArray,
     params: Parameters,
 ) -> xr.DataArray:
-    slope = compute_slope(dem, boundary="reflect")
+    slope = calculate_slope(dem)
 
     floor = floor.copy(deep=True)
     floor.data[slope.data > params.max_slope] = 0
