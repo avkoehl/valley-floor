@@ -37,7 +37,7 @@ def sample_cross_sections(
     return xs_points
 
 
-# --- cross section generation (from streamkit) ---
+# --- cross section generation ---
 
 
 def _create_cross_sections(
@@ -45,7 +45,7 @@ def _create_cross_sections(
     interval_distance: float,
     width: float,
     linestring_ids: Optional[Sequence] = None,
-    smoothed: bool = False,
+    smoothed: bool = True,
 ) -> gpd.GeoDataFrame:
     if linestring_ids is None:
         linestring_ids = linestrings.index
@@ -112,7 +112,7 @@ def _points_along_linestring(linestring, interval, crs=None) -> gpd.GeoDataFrame
 
 
 def _create_xs_for_linestring(
-    linestring, interval_distance, width, crs=None, smoothed=False
+    linestring, interval_distance, width, crs=None, smoothed=True
 ):
     if smoothed:
         angles, points = _perpendicular_angles_smoothed(linestring, interval_distance)
