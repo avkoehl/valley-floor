@@ -7,10 +7,3 @@ __all__ = [
     "Parameters",
     "ValleyFloorDetailed",
 ]
-
-try:
-    from vhs.from_flowlines import prepare_inputs
-
-    __all__.append("prepare_inputs")
-except ImportError:
-    pass
