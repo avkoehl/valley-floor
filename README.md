@@ -7,7 +7,7 @@ A Python package for delineating valley floors from digital elevation models (DE
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
 processes, composed of floodplains, terraces, alluvial fans, and channels. From a DEM,
 a HAND (height above nearest drainage) raster, and a reach-labeled channel network with
-matching subbasins, `vhs` produces a binary valley-floor raster.
+matching subbasins, `vhs` produces a binary valley floor raster.
 
 The method combines two components:
 
@@ -20,7 +20,7 @@ The method combines two components:
 ## Installation
 
 ```bash
-pip install "git+https://github.com/avkoehl/valley-floor.git"
+pip install "git+https://github.com/avkoehl/vhs.git"
 ```
 
 ## Usage
