@@ -1,6 +1,6 @@
-# vhs (Valley Hillslope Separator)
+# vhs 
 
-A Python package for delineating valley floors from digital elevation models (DEMs).
+vhs (Valley Hillslope Separator) is a Python package for delineating valley floors from digital elevation models (DEMs).
 
 ![Valley floor delineation from a DEM, HAND, and a labeled channel network](assets/graphical_abstract.png)
 
