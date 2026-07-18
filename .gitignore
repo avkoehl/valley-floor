@@ -28,6 +28,7 @@ run.py
 
 
 # Python
+dist/
 __pycache__/
 *.py[cod]
 .python-version

@@ -2,10 +2,12 @@
 
 A Python package for delineating valley floors from digital elevation models (DEMs).
 
-Documentation: https://avkoehl.github.io/valley-floor/
+![Valley floor delineation from a DEM, HAND, and a labeled channel network](assets/graphical_abstract.png)
 
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
-processes, composed of floodplains, terraces, alluvial fans, and channels.
+processes, composed of floodplains, terraces, alluvial fans, and channels. From a DEM,
+a HAND (height above nearest drainage) raster, and a reach-labeled channel network with
+matching subbasins, `vhs` produces a binary valley-floor raster.
 
 The method combines two components:
 
@@ -17,63 +19,28 @@ The method combines two components:
 
 ## Installation
 
-Core package: 
 ```bash
-pip install "valley-floor @ git+https://github.com/avkoehl/valley-floor.git"
-```
-
-With the optional preprocessing pipeline and example dataset (requires streamkit):
-```bash
-pip install "valley-floor[streamkit] @ git+https://github.com/avkoehl/valley-floor.git"
+pip install "git+https://github.com/avkoehl/valley-floor.git"
 ```
 
 ## Usage
 
-### Core usage 
-
-If you have your own HAND, channel network, and subbasins:
+With your own HAND, channel network, and subbasins (all `xarray.DataArray`s on the
+same grid; channel network is a reach-labeled raster whose IDs match the subbasins):
 
 ```python
 from vhs import map_valley_floor, Parameters
 
-# all four inputs are xarray.DataArrays on the same grid
 valley_floor = map_valley_floor(
     dem=dem,
     hand=hand,
-    channel_network=channel_network,  # reach-labeled raster, IDs match subbasins
+    channel_network=channel_network,
     subbasins=subbasins,
-    params=Parameters(),              # optional, defaults shown
+    params=Parameters(),   # optional; defaults shown in the table below
 )
-# valley_floor is an xarray.DataArray (uint8, nodata=255)
 ```
 
-For access to intermediate outputs (region floor, flood floor, slope break points,
-per-reach HAND thresholds):
-
-```python
-from vhs import map_valley_floor_detailed
-
-result = map_valley_floor_detailed(dem, hand, channel_network, subbasins)
-result.valley_floor       # final binary raster
-result.region_floor       # region growing component
-result.flood_floor        # reach flooding component
-result.slope_break_pts    # GeoDataFrame of detected valley wall points
-result.reach_thresholds   # dict of {reach_id: HAND threshold}
-```
-
-### Convenience usage — with streamkit
-
-If you have a raw DEM and vector flowlines, `prepare_inputs` runs a streamkit-based
-workflow to produce the four required inputs:
-
-```python
-from vhs import map_valley_floor, prepare_inputs
-
-dem, hand, channel_network, subbasins = prepare_inputs(dem, flowlines)
-valley_floor = map_valley_floor(dem, hand, channel_network, subbasins)
-```
-
-### Tuning parameters
+### Parameters
 
 ```python
 from vhs import Parameters
@@ -86,30 +53,48 @@ params = Parameters(
 valley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)
 ```
 
-## Developement
+Parameters can be saved and reloaded as JSON with `params.to_json(path)` and
+`Parameters.from_json(path)`.
 
-Install the package with development dependencies and register the package's
-virtual environment as a Jupyter kernel:
-```bash
-git clone git@github.com:avkoehl/valley-floor.git
-cd valley-floor
-uv sync                        # core only
-uv sync --extra streamkit --group dev  # include streamkit and development dependencies
-uv run python -m ipykernel install --user --name valley-floor # register the package's virtual environment as a Jupyter kernel
-```
+## Configuration parameters
 
+All parameters live on the `Parameters` dataclass, grouped by pipeline stage.
 
-Run tests with pytest:
-```bash
-uv run pytest -v
-```
+#### Headwater filtering
 
-Build the documentation and preview it locally:
-```bash
-uv run quartodoc build
-quarto preview
-```
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `headwater_min_length` | 1,000 | m | Tip reaches shorter than this are treated as headwaters and dropped from valley-floor mapping (their channel pixels are reattached at the end). |
+| `headwater_max_mean_slope` | 5.0 | degrees | Tip reaches whose mean channel slope exceeds this are treated as headwaters and dropped. |
 
-## Contact
+#### Region growing
 
-Arthur Koehl — avkoehl at ucdavis.edu
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `region_smooth_sigma` | 90 | m | Gaussian smoothing length applied to the slope surface before region growing; larger values bridge small rough patches. |
+| `region_slope_threshold` | 3.0 | degrees | Maximum slope for a pixel to be grown into the valley floor from the channel network; lower values give tighter, more confined floors. |
+
+#### Cross-section sampling
+
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `xs_interval_distance` | 100 | m | Spacing between cross-sections sampled along each reach. |
+| `xs_length` | 1,500 | m | Total length of each cross-section (extends this far to either side of the channel). |
+| `xs_point_spacing` | 10 | m | Spacing between elevation sample points along each cross-section. |
+
+#### Reach flooding
+
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `flood_steep_slope` | 10.0 | degrees | Minimum slope for a cross-section segment to count as a valley wall when detecting slope breaks. |
+| `flood_min_elevation_gain` | 10.0 | m | Minimum elevation gain across a steep segment to confirm it as a valley wall (slope-break point). |
+| `flood_default_hand` | 10 | m | Fallback HAND threshold used for a reach when too few valid slope-break points are found. |
+| `flood_percentile` | 85.0 | percentile | Percentile of slope-break HAND values used as the reach's flood threshold; higher values flood wider. |
+| `flood_min_points` | 10 | count | Minimum number of valid slope-break points a reach needs before its threshold is computed from data instead of the default. |
+
+#### Postprocessing
+
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `min_hole_size` | 40,000 | m² | Holes in the valley floor smaller than this are filled; set to 0 to disable hole filling. |
+| `max_slope` | 15.0 | degrees | Pixels steeper than this are removed from the final valley floor. |
