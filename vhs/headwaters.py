@@ -5,13 +5,40 @@ from vhs.utils import raster_network_to_vector
 from vhs.config import Parameters
 
 
+def _index_pixels_by_id(id_raster: np.ndarray) -> dict:
+    """Group pixel (row, col) coordinates by integer raster value.
+
+    Single pass over the raster instead of one `== id` scan per id, so this
+    is O(pixels log pixels) rather than O(pixels * n_ids). Groups preserve
+    row-major (np.where) order within each id, matching the per-id scans it
+    replaces.
+    """
+    valid = np.isfinite(id_raster) & (id_raster != 0)
+    rows, cols = np.where(valid)
+    ids = id_raster[rows, cols].astype(np.int64)
+
+    order = np.argsort(ids, kind="stable")
+    ids_sorted = ids[order]
+    rows_sorted = rows[order]
+    cols_sorted = cols[order]
+
+    unique_ids, start_idx = np.unique(ids_sorted, return_index=True)
+    end_idx = np.append(start_idx[1:], len(ids_sorted))
+
+    return {
+        int(uid): (rows_sorted[s:e], cols_sorted[s:e])
+        for uid, s, e in zip(unique_ids, start_idx, end_idx)
+    }
+
+
 def filter_headwaters(
     channel_network: xr.DataArray,
     dem: xr.DataArray,
     params: Parameters,
 ) -> tuple[xr.DataArray, list[int]]:
     network_gdf = raster_network_to_vector(channel_network)
-    tip_ids = _identify_tips(channel_network, dem, network_gdf)
+    pixel_index = _index_pixels_by_id(channel_network.values)
+    tip_ids = _identify_tips(channel_network, dem, network_gdf, pixel_index)
 
     headwater_ids = []
     for stream_id in tip_ids:
@@ -20,7 +47,7 @@ def filter_headwaters(
         if length < params.headwater_min_length:
             headwater_ids.append(stream_id)
             continue
-        slope = _mean_slope(channel_network, dem, stream_id, length)
+        slope = _mean_slope(dem, stream_id, length, pixel_index)
         if slope > params.headwater_max_mean_slope:
             headwater_ids.append(stream_id)
 
@@ -35,15 +62,16 @@ def _identify_tips(
     channel_network: xr.DataArray,
     dem: xr.DataArray,
     network_gdf,
+    pixel_index: dict,
 ) -> list[int]:
-    net_data = channel_network.values
     dem_data = dem.values
+    net_data = channel_network.values
     nrows, ncols = net_data.shape
 
     tips = []
 
     for stream_id in network_gdf["stream_id"]:
-        rows, cols = np.where(net_data == stream_id)
+        rows, cols = pixel_index.get(int(stream_id), (np.empty(0, dtype=int), np.empty(0, dtype=int)))
 
         if len(rows) == 0:
             continue
@@ -95,13 +123,13 @@ def _identify_tips(
 
 
 def _mean_slope(
-    channel_network: xr.DataArray,
     dem: xr.DataArray,
     stream_id: int,
     length: float,
+    pixel_index: dict,
 ) -> float:
-    mask = channel_network.values == stream_id
-    elevation_values = dem.values[mask]
+    rows, cols = pixel_index.get(int(stream_id), (np.empty(0, dtype=int), np.empty(0, dtype=int)))
+    elevation_values = dem.values[rows, cols]
     elevation_values = elevation_values[np.isfinite(elevation_values)]
     if len(elevation_values) == 0 or length == 0:
         return 0.0

@@ -37,11 +37,20 @@ def _apply_flooding(
     reach_thresholds: dict,
     subbasins: xr.DataArray,
 ) -> xr.DataArray:
-    floor = hand.copy(data=np.zeros_like(hand.data, dtype=np.uint8))
-    for subbasin_id, threshold in reach_thresholds.items():
-        sub_mask = subbasins == subbasin_id
-        flood_mask = (hand <= threshold) & sub_mask
-        floor.data[flood_mask.data] = 1
+    # Vectorized equivalent of looping `subbasins == subbasin_id` per reach
+    # (O(n_reaches * n_pixels)): build a per-subbasin threshold lookup once
+    # via np.unique's inverse index, then apply it to the whole raster in
+    # one comparison (O(n_pixels log n_pixels)).
+    sub_data = subbasins.values
+    unique_subs, inverse = np.unique(sub_data, return_inverse=True)
+    threshold_lut = np.full(unique_subs.shape, np.nan, dtype=np.float64)
+    for i, sid in enumerate(unique_subs):
+        if sid in reach_thresholds:
+            threshold_lut[i] = reach_thresholds[sid]
+    thresholds_raster = threshold_lut[inverse].reshape(sub_data.shape)
+
+    flood = hand.data <= thresholds_raster
+    floor = hand.copy(data=flood.astype(np.uint8))
     floor.data[np.isnan(hand.data)] = 255
     floor = floor.rio.set_nodata(255)
     floor = floor.rio.write_nodata(255, encoded=True)
