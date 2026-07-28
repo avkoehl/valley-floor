@@ -1,11 +1,22 @@
+import time
+from contextlib import contextmanager
+
 import numpy as np
 import xarray as xr
+from loguru import logger
 
 from vhs.config import Parameters, ValleyFloorDetailed
 from vhs.headwaters import filter_headwaters
 from vhs.postprocess import postprocess
 from vhs.components.region_growing import grow_region
 from vhs.components.reach_flooding import flood_reaches
+
+
+@contextmanager
+def _stage(name):
+    t0 = time.perf_counter()
+    yield
+    logger.info("{} done in {:.2f}s", name, time.perf_counter() - t0)
 
 
 def map_valley_floor(
@@ -15,6 +26,7 @@ def map_valley_floor(
     subbasins: xr.DataArray,
     params: Parameters | None = None,
 ) -> xr.DataArray:
+    """Delineate the valley floor; see `map_valley_floor_detailed`."""
     return map_valley_floor_detailed(
         dem, hand, channel_network, subbasins, params
     ).valley_floor
@@ -27,26 +39,40 @@ def map_valley_floor_detailed(
     subbasins: xr.DataArray,
     params: Parameters | None = None,
 ) -> ValleyFloorDetailed:
+    """Delineate the valley floor from a DEM, HAND, channel network, and
+    subbasins raster, returning the intermediate rasters/tables alongside the
+    final valley floor (see `ValleyFloorDetailed`).
+
+    Runs, in order: headwater filtering, region growing, reach flooding,
+    headwater reattachment, and postprocessing. Emits an INFO-level log line
+    via loguru after each stage with its elapsed time - disabled by default
+    (loguru's default level), enable with `logger.enable("vhs")` or by
+    configuring a sink at INFO or below.
+    """
     if params is None:
         params = Parameters()
 
     _validate_inputs(dem, hand, channel_network, subbasins)
 
-    filtered_network, headwater_ids = filter_headwaters(channel_network, dem, params)
+    with _stage("filter_headwaters"):
+        filtered_network, headwater_ids = filter_headwaters(channel_network, dem, params)
 
-    region_floor = grow_region(
-        dem,
-        filtered_network,
-        params.region_slope_threshold,
-        params.region_smooth_sigma,
-    )
-    flood_floor, slope_break_pts, reach_thresholds = flood_reaches(
-        filtered_network,
-        dem,
-        hand,
-        subbasins,
-        params,
-    )
+    with _stage("grow_region"):
+        region_floor = grow_region(
+            dem,
+            filtered_network,
+            params.region_slope_threshold,
+            params.region_smooth_sigma,
+        )
+
+    with _stage("flood_reaches"):
+        flood_floor, slope_break_pts, reach_thresholds = flood_reaches(
+            filtered_network,
+            dem,
+            hand,
+            subbasins,
+            params,
+        )
 
     floor = (region_floor == 1) | (flood_floor == 1)
     floor = floor.astype(np.uint8)
@@ -54,8 +80,11 @@ def map_valley_floor_detailed(
     floor = floor.rio.set_nodata(255)
     floor = floor.rio.write_nodata(255)
 
-    floor = _reattach_headwaters(floor, channel_network, headwater_ids)
-    floor = postprocess(floor, channel_network, dem, params)
+    with _stage("reattach_headwaters"):
+        floor = _reattach_headwaters(floor, channel_network, headwater_ids)
+
+    with _stage("postprocess"):
+        floor = postprocess(floor, channel_network, dem, params)
 
     return ValleyFloorDetailed(
         valley_floor=floor,
