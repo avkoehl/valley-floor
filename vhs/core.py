@@ -96,6 +96,7 @@ def _reattach_headwaters(
     headwater_ids: list[int],
 ) -> xr.DataArray:
     floor = floor.copy(deep=True)
-    for sid in headwater_ids:
-        floor.data[channel_network.data == sid] = 1
+    # np.isin does one pass over the raster testing membership in
+    # headwater_ids, instead of one `== sid` full-raster scan per id
+    floor.data[np.isin(channel_network.data, headwater_ids)] = 1
     return floor
