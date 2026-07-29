@@ -1,7 +1,8 @@
 [project]
 name = "vhs"
-version = "0.1.0"
-description = "Delineate valley floors from digital elevation models"
+version = "1.0.0"
+description = "vhs (Valley Hillslope Separator): delineate valley floors from a DEM, HAND raster, and reach-labeled channel network by combining slope-based region growing with reach-specific flood-fill thresholds"
+license = "MIT"
 authors = [
     {name = "Arthur Koehl", email = "avkoehl@ucdavis.edu"}
 ]
