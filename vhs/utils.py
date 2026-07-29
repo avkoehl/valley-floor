@@ -7,6 +7,19 @@ from shapely.geometry import LineString
 from skimage.morphology import label
 
 
+# Florinsky's 5x5 third-order polynomial fit: p (dz/dx) and q (dz/dy) are each
+# a fixed linear combination of the 25 cells in the window, with the center
+# cell (0, 0) carrying coefficient 0 in both. Coefficients derived by
+# expanding the original closed-form p/q equations term by term.
+_FLORINSKY_COEFS = (
+    ((-2, -2), 31, -31), ((-2, -1), -44, 5), ((-2, 0), 0, 17), ((-2, 1), 44, 5), ((-2, 2), -31, -31),
+    ((-1, -2), -5, 44), ((-1, -1), -62, 62), ((-1, 0), 0, 68), ((-1, 1), 62, 62), ((-1, 2), 5, 44),
+    ((0, -2), -17, 0), ((0, -1), -68, 0), ((0, 1), 68, 0), ((0, 2), 17, 0),
+    ((1, -2), -5, -44), ((1, -1), -62, -62), ((1, 0), 0, -68), ((1, 1), 62, -62), ((1, 2), 5, -44),
+    ((2, -2), 31, 31), ((2, -1), -44, -5), ((2, 0), 0, -17), ((2, 1), 44, -5), ((2, 2), -31, 31),
+)
+
+
 def calculate_slope(dem, resolution=None, z_factor=1.0):
     """
     Slope via Florinsky's 5x5 third-order polynomial fit, ported from
@@ -27,45 +40,36 @@ def calculate_slope(dem, resolution=None, z_factor=1.0):
         if resolution is None:
             raise ValueError("resolution must be provided for plain array input")
 
-    def shift(a, dy, dx):
-        out = np.full_like(a, np.nan)
-        rows, cols = a.shape
+    rows, cols = arr.shape
+    center = arr * z_factor
+    p_accum = np.zeros_like(arr)
+    q_accum = np.zeros_like(arr)
+
+    # accumulate p/q one shifted window at a time instead of materializing
+    # all 25 shifted grids simultaneously (previously ~25x the DEM's memory
+    # footprint at once; this keeps only a handful of full-size arrays alive)
+    for (dy, dx), pc, qc in _FLORINSKY_COEFS:
+        shifted = np.full_like(arr, np.nan)
         r0s, r1s = max(0, -dy), rows - max(0, dy)
         c0s, c1s = max(0, -dx), cols - max(0, dx)
         r0d, r1d = max(0, dy), rows - max(0, -dy)
         c0d, c1d = max(0, dx), cols - max(0, -dx)
-        out[r0d:r1d, c0d:c1d] = a[r0s:r1s, c0s:c1s]
-        return out
+        shifted[r0d:r1d, c0d:c1d] = arr[r0s:r1s, c0s:c1s]
+        shifted *= z_factor
+        z_i = np.where(np.isnan(shifted), center, shifted)
+        del shifted
 
-    center = arr * z_factor
-    z = []
-    for dy in (-2, -1, 0, 1, 2):
-        for dx in (-2, -1, 0, 1, 2):
-            nb = shift(arr, dy, dx) * z_factor
-            z.append(np.where(np.isnan(nb), center, nb))
+        if pc:
+            p_accum += pc * z_i
+        if qc:
+            q_accum += qc * z_i
+        del z_i
 
-    p = (
-        1.0
-        / (420.0 * resolution)
-        * (
-            44.0 * (z[3] + z[23] - z[1] - z[21])
-            + 31.0 * (z[0] + z[20] - z[4] - z[24] + 2.0 * (z[8] + z[18] - z[6] - z[16]))
-            + 17.0 * (z[14] - z[10] + 4.0 * (z[13] - z[11]))
-            + 5.0 * (z[9] + z[19] - z[5] - z[15])
-        )
-    )
-    q = (
-        1.0
-        / (420.0 * resolution)
-        * (
-            44.0 * (z[5] + z[9] - z[15] - z[19])
-            + 31.0 * (z[20] + z[24] - z[0] - z[4] + 2.0 * (z[6] + z[8] - z[16] - z[18]))
-            + 17.0 * (z[2] - z[22] + 4.0 * (z[7] - z[17]))
-            + 5.0 * (z[1] + z[3] - z[21] - z[23])
-        )
-    )
+    scale = 1.0 / (420.0 * resolution)
+    p_accum *= scale
+    q_accum *= scale
 
-    slope_arr = np.degrees(np.arctan(np.sqrt(p**2 + q**2)))
+    slope_arr = np.degrees(np.arctan(np.hypot(p_accum, q_accum)))
     slope_arr[np.isnan(arr)] = np.nan
 
     if is_xarray:
