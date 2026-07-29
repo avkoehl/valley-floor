@@ -53,6 +53,7 @@ def map_valley_floor_detailed(
         params = Parameters()
 
     _validate_inputs(dem, hand, channel_network, subbasins)
+    hand, channel_network, subbasins = _align_coords(dem, hand, channel_network, subbasins)
 
     with _stage("filter_headwaters"):
         filtered_network, headwater_ids = filter_headwaters(channel_network, dem, params)
@@ -93,6 +94,22 @@ def map_valley_floor_detailed(
         slope_break_pts=slope_break_pts,
         reach_thresholds=reach_thresholds,
     )
+
+
+def _align_coords(dem, *others):
+    """Snap x/y coordinates onto dem's.
+
+    Rasters produced by separate pipeline runs can carry transforms that
+    agree to float32 precision but differ in the last bit or two of their
+    float64 pixel size, so their x/y coordinate arrays aren't bit-identical
+    even when `_validate_inputs` confirms the shapes match. Left alone, that
+    causes xarray's automatic coordinate alignment on binary ops (e.g.
+    `a + b` in remove_isolated_areas) to silently intersect to a smaller
+    grid instead of raising. Since shapes are already validated as equal,
+    the rasters are meant to be pixel-for-pixel co-registered, so it's safe
+    to force them onto a single coordinate system.
+    """
+    return tuple(o.assign_coords(x=dem["x"], y=dem["y"]) for o in others)
 
 
 def _validate_inputs(dem, hand, channel_network, subbasins):
