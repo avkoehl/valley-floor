@@ -13,6 +13,10 @@ url: "https://github.com/avkoehl/vhs"
 license: "MIT"
 version: "1.0.0"
 date-released: "2026-07-29"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21685156"
+    description: "Zenodo archive of this release"
 keywords:
   - geomorphology
   - valley floor
