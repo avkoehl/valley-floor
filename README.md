@@ -25,6 +25,9 @@ The method combines two components:
 pip install valleyfloor
 ```
 
+> **Note:** `valleyfloor` is the PyPI distribution name; the import package name is `vhs`,
+> i.e. `import vhs`.
+
 ## Usage
 
 With your own HAND, channel network, and subbasins (all `xarray.DataArray`s on the
