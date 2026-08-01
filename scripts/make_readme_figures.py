@@ -16,6 +16,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource, ListedColormap
+from scipy.ndimage import maximum_filter
 
 import vhs
 
@@ -29,14 +30,31 @@ def _extent(da):
 
 def _hillshade(dem):
     ls = LightSource(azdeg=315, altdeg=45)
+    valid = np.isfinite(dem.values)
     z = np.nan_to_num(dem.values, nan=np.nanmin(dem.values))
-    return ls.hillshade(z, vert_exag=2)
+    hs = ls.hillshade(z, vert_exag=2)
+    hs[~valid] = np.nan  # nodata stays transparent instead of flat mid-grey
+    return hs
 
 
 def _panel(ax, title):
+    ax.set_facecolor("white")
     ax.set_title(title, fontsize=11, pad=6)
     ax.set_xticks([])
     ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+
+def _add_contours(ax, dem, ext, interval=5):
+    z = dem.values
+    lo = np.floor(np.nanmin(z) / interval) * interval
+    hi = np.nanmax(z)
+    levels = np.arange(lo, hi + interval, interval)
+    ax.contour(
+        z, levels=levels, extent=ext, origin="upper",
+        colors="black", linewidths=0.35, alpha=0.3,
+    )
 
 
 def graphical_abstract(data, out_path):
@@ -54,15 +72,25 @@ def graphical_abstract(data, out_path):
     ax = fig.add_subplot(gs[0, 0])
     ax.imshow(hs, extent=ext, cmap="gray", alpha=1.0)
     ax.imshow(dem.values, extent=ext, cmap="terrain", alpha=0.6)
+    _add_contours(ax, dem, ext)
     _panel(ax, "Conditioned DEM")
 
-    # Channel network (derived from the same flow directions as the DEM's
-    # conditioning) over hillshade
+    # Channel network, colored by reach id, over hillshade
     ax = fig.add_subplot(gs[0, 1])
     ax.imshow(hs, extent=ext, cmap="gray", alpha=1.0)
-    net = np.where(np.isfinite(channel.values) & (channel.values != 0), 1.0, np.nan)
-    ax.imshow(net, extent=ext, cmap=ListedColormap(["#c94f4f"]), interpolation="nearest")
-    _panel(ax, "Channel network\n(+ flow directions)")
+    _add_contours(ax, dem, ext)
+    rng = np.random.default_rng(0)
+    colors = rng.random((256, 3)) * 0.7 + 0.15
+    net_ids = channel.values.copy()
+    valid = np.isfinite(net_ids) & (net_ids != 0)
+    ids = np.unique(net_ids[valid])
+    remap = np.full(net_ids.shape, -1.0)
+    for i, v in enumerate(ids):
+        remap[net_ids == v] = i % 256
+    remap = maximum_filter(remap, size=3)  # thicken 1px lines for legibility
+    remap = np.where(remap >= 0, remap, np.nan)
+    ax.imshow(remap, extent=ext, cmap=ListedColormap(colors), interpolation="nearest")
+    _panel(ax, "Channel network")
 
     # arrow
     ax = fig.add_subplot(gs[0, 2])
@@ -74,6 +102,7 @@ def graphical_abstract(data, out_path):
     # Valley floor over hillshade
     ax = fig.add_subplot(gs[0, 3])
     ax.imshow(hs, extent=ext, cmap="gray")
+    _add_contours(ax, dem, ext)
     vf = np.where(floor.values == 1, 1.0, np.nan)
     ax.imshow(vf, extent=ext, cmap=ListedColormap(["#2b8cbe"]), alpha=0.75,
               interpolation="nearest")

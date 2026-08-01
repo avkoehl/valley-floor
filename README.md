@@ -2,14 +2,14 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21685156.svg)](https://doi.org/10.5281/zenodo.21685156)
 
-vhs (Valley Hillslope Separator) is a Python package for delineating valley floors from digital elevation models (DEMs).
+vhs (valley hillslope separator) is a Python package for delineating valley floors from digital elevation models (DEMs).
 
 ![Valley floor delineation from a conditioned DEM and a labeled channel network](https://raw.githubusercontent.com/avkoehl/vhs/main/assets/graphical_abstract.png)
 
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
 processes, composed of floodplains, terraces, alluvial fans, and channels. From a
 hydrologically conditioned DEM and a reach-labeled channel network, `vhs` produces a
-binary valley floor raster. D8 flow directions are computed internally from the DEM.
+binary valley floor raster. 
 
 The method combines two components:
 
@@ -30,15 +30,10 @@ pip install valleyfloor
 
 ## Usage
 
-With your own conditioned DEM and channel network (both `xarray.DataArray`s on the
-same grid). `dem` must be hydrologically conditioned - D8 flow directions are computed
-from it internally, so that pairing is always consistent. `channel_network` (a
-reach-labeled raster) must be derived using the same flat tie-break convention
-`vhs.utils.routing.compute_flow_directions` uses: ties flow toward the strictly larger
-row-major index. Reach flooding routes along the computed flow directions, so a channel
-network resolved differently in flats - disproportionately valley bottoms and
-floodplains - produces meaningless results there; this isn't validated, since it can't
-be verified from the rasters alone.
+With your own conditioned DEM and channel network (both `xarray.DataArray`s on
+the same grid). `dem` must be hydrologically conditioned - D8 flow directions
+are computed from it internally,  `channel_network` (a reach-labeled raster)
+must align with the hydro conditioned dem.
 
 ```python
 from vhs import map_valley_floor, Parameters

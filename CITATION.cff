@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata from this file."
 type: software
 title: "vhs"
-abstract: "vhs (Valley Hillslope Separator) delineates valley floors from a hydrologically conditioned DEM and a reach-labeled channel network. It combines slope-based region growing, which captures wide unconfined valley floors, with reach-specific flood-fill thresholds derived from cross-section analysis, which captures narrow confined valley floors."
+abstract: "vhs (valley hillslope separator) delineates valley floors from a hydrologically conditioned DEM and a reach-labeled channel network. It combines slope-based region growing, which captures wide unconfined valley floors, with reach-specific flood-fill thresholds derived from cross-section analysis, which captures narrow confined valley floors."
 authors:
   - family-names: "Koehl"
     given-names: "Arthur"
