@@ -11,9 +11,7 @@ import xarray as xr
 
 _FILES = {
     "dem": "dem.tif",
-    "hand": "hand.tif",
     "channel_network": "channel_network.tif",
-    "subbasins": "subbasins.tif",
     "valley_floor": "valley_floor.tif",
 }
 
@@ -24,8 +22,7 @@ def sample_data_path(name: str) -> str:
     Parameters
     ----------
     name : str
-        One of ``dem``, ``hand``, ``channel_network``, ``subbasins``,
-        ``valley_floor``.
+        One of ``dem``, ``channel_network``, ``valley_floor``.
     """
     if name not in _FILES:
         raise KeyError(f"Unknown sample raster {name!r}. Options: {list(_FILES)}")
@@ -35,13 +32,12 @@ def sample_data_path(name: str) -> str:
 def load_sample() -> dict[str, xr.DataArray]:
     """Load the bundled sample dataset.
 
-    Returns a dict with the four model inputs plus a reference ``valley_floor``:
+    Returns a dict with the two model inputs plus a reference ``valley_floor``:
 
-    - ``dem``             : float32 elevation (m)
-    - ``hand``            : float32 height above nearest drainage (m)
-    - ``channel_network`` : int32 reach-labeled raster (IDs match subbasins)
-    - ``subbasins``       : int32 subbasin raster
-    - ``valley_floor``    : uint8 reference output from :func:`vhs.map_valley_floor`
+    - ``dem``             : float32 elevation (m), hydrologically conditioned
+    - ``channel_network`` : float64 reach-labeled raster, derived using the same
+      flat tie-break convention as :func:`vhs.utils.routing.compute_flow_directions`
+    - ``valley_floor``    : float32 reference output from :func:`vhs.map_valley_floor`
     """
     return {
         name: rioxarray.open_rasterio(sample_data_path(name), masked=True).squeeze()

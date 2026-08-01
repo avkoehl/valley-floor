@@ -8,7 +8,7 @@ from shapely.geometry import LineString
 from shapelysmooth import chaikin_smooth, taubin_smooth
 
 from vhs.config import Parameters
-from vhs.utils import raster_network_to_vector
+from vhs.utils.raster import raster_network_to_vector
 
 
 # --- public entry point ---

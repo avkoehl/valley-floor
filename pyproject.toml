@@ -1,7 +1,7 @@
 [project]
 name = "valleyfloor"
-version = "1.0.1"
-description = "vhs (Valley Hillslope Separator): delineate valley floors from a DEM, HAND raster, and reach-labeled channel network by combining slope-based region growing with reach-specific flood-fill thresholds"
+version = "1.1.0"
+description = "vhs (Valley Hillslope Separator): delineate valley floors from a conditioned DEM and a reach-labeled channel network by combining slope-based region growing with reach-specific flood-fill thresholds"
 license = "MIT"
 authors = [
     {name = "Arthur Koehl", email = "avkoehl@ucdavis.edu"}
@@ -11,6 +11,7 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "geopandas>=1.1.1",
     "loguru>=0.7.2",
+    "numba>=0.62.1",
     "numpy>=2.0.0",
     "rioxarray>=0.19.0",
     "scikit-image>=0.25.0",

@@ -10,6 +10,7 @@ from vhs.headwaters import filter_headwaters
 from vhs.postprocess import postprocess
 from vhs.components.region_growing import grow_region
 from vhs.components.reach_flooding import flood_reaches
+from vhs.utils.routing import compute_flow_directions
 
 
 @contextmanager
@@ -21,39 +22,46 @@ def _stage(name):
 
 def map_valley_floor(
     dem: xr.DataArray,
-    hand: xr.DataArray,
     channel_network: xr.DataArray,
-    subbasins: xr.DataArray,
     params: Parameters | None = None,
 ) -> xr.DataArray:
     """Delineate the valley floor; see `map_valley_floor_detailed`."""
-    return map_valley_floor_detailed(
-        dem, hand, channel_network, subbasins, params
-    ).valley_floor
+    return map_valley_floor_detailed(dem, channel_network, params).valley_floor
 
 
 def map_valley_floor_detailed(
     dem: xr.DataArray,
-    hand: xr.DataArray,
     channel_network: xr.DataArray,
-    subbasins: xr.DataArray,
     params: Parameters | None = None,
 ) -> ValleyFloorDetailed:
-    """Delineate the valley floor from a DEM, HAND, channel network, and
-    subbasins raster, returning the intermediate rasters/tables alongside the
+    """Delineate the valley floor from a conditioned DEM and a reach-labeled
+    channel network, returning the intermediate rasters/tables alongside the
     final valley floor (see `ValleyFloorDetailed`).
 
-    Runs, in order: headwater filtering, region growing, reach flooding,
-    headwater reattachment, and postprocessing. Emits an INFO-level log line
-    via loguru after each stage with its elapsed time - disabled by default
-    (loguru's default level), enable with `logger.enable("vhs")` or by
-    configuring a sink at INFO or below.
+    `dem` must be hydrologically conditioned - D8 flow directions are
+    computed from it internally (`compute_flow_directions`), so that pairing
+    is always consistent. `channel_network` must be derived using the same
+    flat tie-break convention `compute_flow_directions` uses (see its
+    docstring) - reach flooding routes along the computed flow directions,
+    so a channel network resolved differently in flats (disproportionately
+    valley bottoms and floodplains) produces meaningless results there. This
+    isn't validated (not verifiable from the rasters alone); it's on the
+    caller to ensure it holds.
+
+    Runs, in order: flow direction computation, headwater filtering, region
+    growing, reach flooding, headwater reattachment, and postprocessing.
+    Emits an INFO-level log line via loguru after each stage with its
+    elapsed time - disabled by default (loguru's default level), enable
+    with `logger.enable("vhs")` or by configuring a sink at INFO or below.
     """
     if params is None:
         params = Parameters()
 
-    _validate_inputs(dem, hand, channel_network, subbasins)
-    hand, channel_network, subbasins = _align_coords(dem, hand, channel_network, subbasins)
+    _validate_inputs(dem, channel_network)
+    (channel_network,) = _align_coords(dem, channel_network)
+
+    with _stage("compute_flow_directions"):
+        flow_directions = compute_flow_directions(dem)
 
     with _stage("filter_headwaters"):
         filtered_network, headwater_ids = filter_headwaters(channel_network, dem, params)
@@ -70,8 +78,7 @@ def map_valley_floor_detailed(
         flood_floor, slope_break_pts, reach_thresholds = flood_reaches(
             filtered_network,
             dem,
-            hand,
-            subbasins,
+            flow_directions,
             params,
         )
 
@@ -112,28 +119,10 @@ def _align_coords(dem, *others):
     return tuple(o.assign_coords(x=dem["x"], y=dem["y"]) for o in others)
 
 
-def _validate_inputs(dem, hand, channel_network, subbasins):
-    shapes = {
-        "dem": dem.shape,
-        "hand": hand.shape,
-        "channel_network": channel_network.shape,
-        "subbasins": subbasins.shape,
-    }
+def _validate_inputs(dem, channel_network):
+    shapes = {"dem": dem.shape, "channel_network": channel_network.shape}
     if len(set(shapes.values())) > 1:
         raise ValueError(f"All inputs must have the same shape. Got: {shapes}")
-
-    network_ids = set(np.unique(channel_network.values)) - {
-        0,
-        channel_network.rio.nodata,
-    }
-    subbasin_ids = set(np.unique(subbasins.values)) - {0, subbasins.rio.nodata}
-    network_ids = {i for i in network_ids if not np.isnan(i)}
-    subbasin_ids = {i for i in subbasin_ids if not np.isnan(i)}
-    missing = network_ids - subbasin_ids
-    if missing:
-        raise ValueError(
-            f"channel_network contains reach IDs with no matching subbasin: {missing}"
-        )
 
 
 def _reattach_headwaters(

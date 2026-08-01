@@ -4,12 +4,12 @@
 
 vhs (Valley Hillslope Separator) is a Python package for delineating valley floors from digital elevation models (DEMs).
 
-![Valley floor delineation from a DEM, HAND, and a labeled channel network](https://raw.githubusercontent.com/avkoehl/vhs/main/assets/graphical_abstract.png)
+![Valley floor delineation from a conditioned DEM and a labeled channel network](https://raw.githubusercontent.com/avkoehl/vhs/main/assets/graphical_abstract.png)
 
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
-processes, composed of floodplains, terraces, alluvial fans, and channels. From a DEM,
-a HAND (height above nearest drainage) raster, and a reach-labeled channel network with
-matching subbasins, `vhs` produces a binary valley floor raster.
+processes, composed of floodplains, terraces, alluvial fans, and channels. From a
+hydrologically conditioned DEM and a reach-labeled channel network, `vhs` produces a
+binary valley floor raster. D8 flow directions are computed internally from the DEM.
 
 The method combines two components:
 
@@ -30,17 +30,22 @@ pip install valleyfloor
 
 ## Usage
 
-With your own HAND, channel network, and subbasins (all `xarray.DataArray`s on the
-same grid; channel network is a reach-labeled raster whose IDs match the subbasins):
+With your own conditioned DEM and channel network (both `xarray.DataArray`s on the
+same grid). `dem` must be hydrologically conditioned - D8 flow directions are computed
+from it internally, so that pairing is always consistent. `channel_network` (a
+reach-labeled raster) must be derived using the same flat tie-break convention
+`vhs.utils.routing.compute_flow_directions` uses: ties flow toward the strictly larger
+row-major index. Reach flooding routes along the computed flow directions, so a channel
+network resolved differently in flats - disproportionately valley bottoms and
+floodplains - produces meaningless results there; this isn't validated, since it can't
+be verified from the rasters alone.
 
 ```python
 from vhs import map_valley_floor, Parameters
 
 valley_floor = map_valley_floor(
     dem=dem,
-    hand=hand,
     channel_network=channel_network,
-    subbasins=subbasins,
     params=Parameters(),   # optional; defaults shown in the table below
 )
 ```
@@ -52,10 +57,10 @@ from vhs import Parameters
 
 params = Parameters(
     region_slope_threshold=2.0,   # degrees, tighter region growing
-    flood_percentile=90.0,        # higher HAND threshold per reach
+    flood_percentile=90.0,        # higher flood threshold per reach
     min_hole_size=20_000,         # m², smaller holes filled
 )
-valley_floor = map_valley_floor(dem, hand, channel_network, subbasins, params=params)
+valley_floor = map_valley_floor(dem, channel_network, params=params)
 ```
 
 Parameters can be saved and reloaded as JSON with `params.to_json(path)` and
@@ -93,8 +98,8 @@ All parameters live on the `Parameters` dataclass, grouped by pipeline stage.
 |---|---|---|---|
 | `flood_steep_slope` | 10.0 | degrees | Minimum slope for a cross-section segment to count as a valley wall when detecting slope breaks. |
 | `flood_min_elevation_gain` | 10.0 | m | Minimum elevation gain across a steep segment to confirm it as a valley wall (slope-break point). |
-| `flood_default_hand` | 10 | m | Fallback HAND threshold used for a reach when too few valid slope-break points are found. |
-| `flood_percentile` | 85.0 | percentile | Percentile of slope-break HAND values used as the reach's flood threshold; higher values flood wider. |
+| `flood_default_hand` | 10 | m | Fallback elevation-gain threshold used for a reach when too few valid slope-break points are found. |
+| `flood_percentile` | 85.0 | percentile | Percentile of slope-break elevation-gain values used as the reach's flood threshold; higher values flood wider. |
 | `flood_min_points` | 10 | count | Minimum number of valid slope-break points a reach needs before its threshold is computed from data instead of the default. |
 
 #### Postprocessing

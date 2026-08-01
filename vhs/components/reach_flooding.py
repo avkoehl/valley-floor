@@ -1,16 +1,17 @@
+from rasterio.transform import rowcol
 import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from vhs.components._cross_sections import sample_cross_sections
+from vhs.utils.cross_sections import sample_cross_sections
+from vhs.utils.routing import route_points_to_reach, flood_from_reaches
 from vhs.config import Parameters
 
 
 def flood_reaches(
     channel_network: xr.DataArray,
     dem: xr.DataArray,
-    hand: xr.DataArray,
-    subbasins: xr.DataArray,
+    flow_directions: xr.DataArray,
     params: Parameters,
 ) -> tuple[xr.DataArray, gpd.GeoDataFrame, dict]:
     xs_coords = sample_cross_sections(channel_network, dem, params)
@@ -22,39 +23,14 @@ def flood_reaches(
     reach_thresholds, slope_break_pts = _derive_reach_thresholds(
         slope_break_pts,
         channel_network,
-        hand,
-        subbasins,
+        dem,
+        flow_directions,
         params.flood_default_hand,
         params.flood_percentile,
         params.flood_min_points,
     )
-    flood_floor = _apply_flooding(hand, reach_thresholds, subbasins)
+    flood_floor = flood_from_reaches(channel_network, flow_directions, dem, reach_thresholds)
     return flood_floor, slope_break_pts, reach_thresholds
-
-
-def _apply_flooding(
-    hand: xr.DataArray,
-    reach_thresholds: dict,
-    subbasins: xr.DataArray,
-) -> xr.DataArray:
-    # Vectorized equivalent of looping `subbasins == subbasin_id` per reach
-    # (O(n_reaches * n_pixels)): build a per-subbasin threshold lookup once
-    # via np.unique's inverse index, then apply it to the whole raster in
-    # one comparison (O(n_pixels log n_pixels)).
-    sub_data = subbasins.values
-    unique_subs, inverse = np.unique(sub_data, return_inverse=True)
-    threshold_lut = np.full(unique_subs.shape, np.nan, dtype=np.float64)
-    for i, sid in enumerate(unique_subs):
-        if sid in reach_thresholds:
-            threshold_lut[i] = reach_thresholds[sid]
-    thresholds_raster = threshold_lut[inverse].reshape(sub_data.shape)
-
-    flood = hand.data <= thresholds_raster
-    floor = hand.copy(data=flood.astype(np.uint8))
-    floor.data[np.isnan(hand.data)] = 255
-    floor = floor.rio.set_nodata(255)
-    floor = floor.rio.write_nodata(255, encoded=True)
-    return floor
 
 
 def _detect_slope_breaks(
@@ -76,12 +52,13 @@ def _detect_slope_breaks(
                         "side": side,
                         "geometry": row.geometry,
                         "elevation": row.interp_elevation,
+                        "reach_id": int(row.linestring_id),
                     }
                 )
     if results:
         return gpd.GeoDataFrame(results, geometry="geometry", crs=xs_coords.crs)
     return gpd.GeoDataFrame(
-        columns=["xs_id", "side", "geometry", "elevation"],
+        columns=["xs_id", "side", "geometry", "elevation", "reach_id"],
         geometry="geometry",
         crs=xs_coords.crs,
     )
@@ -90,8 +67,8 @@ def _detect_slope_breaks(
 def _derive_reach_thresholds(
     slope_break_pts: gpd.GeoDataFrame,
     channel_network: xr.DataArray,
-    hand: xr.DataArray,
-    subbasins: xr.DataArray,
+    dem: xr.DataArray,
+    flow_directions: xr.DataArray,
     default_hand: float,
     percentile: float,
     min_points: int,
@@ -102,23 +79,37 @@ def _derive_reach_thresholds(
         return median + 3 * mad
 
     pts = slope_break_pts.copy()
+    pts["gain"] = np.nan
+    pts["routed"] = False
     if not pts.empty:
-        x = xr.DataArray(pts.geometry.x.values, dims="points")
-        y = xr.DataArray(pts.geometry.y.values, dims="points")
-        pts["subbasin"] = subbasins.sel(x=x, y=y, method="nearest").values
-        pts["hand_value"] = hand.sel(x=x, y=y, method="nearest").values
+        # Each breakpoint's own reach is already known from the cross
+        # section it came from (reach_id); route it back to that reach
+        # rather than sampling a precomputed HAND raster, since a
+        # breakpoint can sit closer to a different reach's channel than to
+        # its own.
+        rows, cols = rowcol(
+            dem.rio.transform(), pts.geometry.x.values, pts.geometry.y.values
+        )
+        gains, valid = route_points_to_reach(
+            np.asarray(rows),
+            np.asarray(cols),
+            pts["reach_id"].values,
+            dem,
+            channel_network,
+            flow_directions,
+        )
+        pts["gain"] = gains
+        pts["routed"] = valid
 
     reach_thresholds = {}
     pts["is_outlier"] = False
     if not pts.empty:
-        for subbasin_id, group in pts.groupby("subbasin"):
-            if np.isnan(subbasin_id) or subbasin_id == 0:
-                continue
-            values = group["hand_value"].values
+        for reach_id, group in pts[pts["routed"]].groupby("reach_id"):
+            values = group["gain"].values
             values = values[np.isfinite(values)]
             if len(values) >= min_points:
                 cutoff = _mad_cutoff(values)
-                is_outlier = group["hand_value"] > cutoff
+                is_outlier = group["gain"] > cutoff
                 pts.loc[is_outlier.index[is_outlier], "is_outlier"] = True
                 values = values[values <= cutoff]
                 threshold = (
@@ -128,9 +119,9 @@ def _derive_reach_thresholds(
                 )
             else:
                 threshold = default_hand
-            reach_thresholds[subbasin_id] = threshold
+            reach_thresholds[int(reach_id)] = threshold
 
-    # only assign default threshold to subbasins with an active reach
+    # only assign default threshold to reaches actually present in the network
     active_reach_ids = set(
         int(v) for v in np.unique(channel_network.values) if v != 0 and np.isfinite(v)
     )

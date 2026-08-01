@@ -68,13 +68,13 @@ class Parameters:
     )
     flood_default_hand: int = _param(
         10, "Reach flooding", "m",
-        "Fallback HAND threshold used for a reach when too few valid "
-        "slope-break points are found.",
+        "Fallback elevation-gain threshold used for a reach when too few "
+        "valid slope-break points are found.",
     )
     flood_percentile: float = _param(
         85.0, "Reach flooding", "percentile",
-        "Percentile of slope-break HAND values used as the reach's flood "
-        "threshold; higher values flood wider.",
+        "Percentile of slope-break elevation-gain values used as the reach's "
+        "flood threshold; higher values flood wider.",
     )
     flood_min_points: int = _param(
         10, "Reach flooding", "count",
