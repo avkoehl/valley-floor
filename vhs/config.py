@@ -58,8 +58,16 @@ class Parameters:
     # reach flooding
     flood_steep_slope: float = _param(
         10.0, "Reach flooding", "degrees",
-        "Minimum slope for a cross-section segment to count as a valley wall "
+        "Minimum DEM slope (direction-independent, not measured along the "
+        "cross-section line) for a point to count as part of a valley wall "
         "when detecting slope breaks.",
+    )
+    flood_slope_window: float = _param(
+        30.0, "Reach flooding", "m",
+        "Distance over which the DEM slope raster is smoothed before slope "
+        "breaks are detected, converted internally to a pixel window based "
+        "on the DEM's resolution; damps single-cell noise that would "
+        "otherwise interrupt an otherwise-steep run. Set to 0 to disable.",
     )
     flood_min_elevation_gain: float = _param(
         10.0, "Reach flooding", "m",

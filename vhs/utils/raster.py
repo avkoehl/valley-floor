@@ -3,6 +3,7 @@ import geopandas as gpd
 import xarray as xr
 import rioxarray
 from rasterio.transform import xy
+from scipy.ndimage import uniform_filter
 from shapely.geometry import LineString
 from skimage.morphology import label
 
@@ -20,13 +21,19 @@ _FLORINSKY_COEFS = (
 )
 
 
-def calculate_slope(dem, resolution=None, z_factor=1.0):
+def calculate_slope(dem, resolution=None, z_factor=1.0, smooth_window=None):
     """
     Slope via Florinsky's 5x5 third-order polynomial fit, ported from
     WhiteboxTools' Slope tool (whitebox_tools, Lindsay, MIT license), which
     implements equations from:
     Florinsky, I. (2016). Digital Terrain Analysis in Soil Science and
     Geology, 2nd ed., Chapter 4, p. 117. Academic Press.
+
+    `smooth_window`, if given, is a distance (same units as `resolution`)
+    over which the resulting slope raster is box-averaged before being
+    returned - converted internally to a pixel window via `resolution`, so
+    the same physical smoothing distance applies regardless of the input
+    DEM's native resolution.
     """
     is_xarray = hasattr(dem, "rio") and hasattr(dem, "values")
 
@@ -72,9 +79,31 @@ def calculate_slope(dem, resolution=None, z_factor=1.0):
     slope_arr = np.degrees(np.arctan(np.hypot(p_accum, q_accum)))
     slope_arr[np.isnan(arr)] = np.nan
 
+    if smooth_window:
+        slope_arr = _smooth_nan_aware(slope_arr, smooth_window, resolution)
+
     if is_xarray:
         return dem.copy(data=slope_arr)
     return slope_arr
+
+
+def _smooth_nan_aware(arr, window_distance, resolution):
+    """Box-average `arr` over a `window_distance`-sized window (converted to
+    pixels via `resolution`), treating NaN cells as missing rather than 0 -
+    a plain `uniform_filter` would otherwise pull values toward 0 near any
+    nodata edge."""
+    size = max(1, round(window_distance / resolution))
+    if size <= 1:
+        return arr
+
+    valid = np.isfinite(arr)
+    filled = np.where(valid, arr, 0.0)
+    sums = uniform_filter(filled, size=size, mode="nearest")
+    counts = uniform_filter(valid.astype(np.float64), size=size, mode="nearest")
+    with np.errstate(invalid="ignore", divide="ignore"):
+        smoothed = sums / counts
+    smoothed[~valid] = np.nan
+    return smoothed
 
 
 def remove_isolated_areas(

@@ -91,7 +91,8 @@ All parameters live on the `Parameters` dataclass, grouped by pipeline stage.
 
 | Parameter | Default | Unit | Description |
 |---|---|---|---|
-| `flood_steep_slope` | 10.0 | degrees | Minimum slope for a cross-section segment to count as a valley wall when detecting slope breaks. |
+| `flood_steep_slope` | 10.0 | degrees | Minimum DEM slope (direction-independent, not measured along the cross-section line) for a point to count as part of a valley wall when detecting slope breaks. |
+| `flood_slope_window` | 30.0 | m | Distance over which the DEM slope raster is smoothed before slope breaks are detected, converted internally to a pixel window based on the DEM's resolution; damps single-cell noise that would otherwise interrupt an otherwise-steep run. Set to 0 to disable. |
 | `flood_min_elevation_gain` | 10.0 | m | Minimum elevation gain across a steep segment to confirm it as a valley wall (slope-break point). |
 | `flood_default_hand` | 10 | m | Fallback elevation-gain threshold used for a reach when too few valid slope-break points are found. |
 | `flood_percentile` | 85.0 | percentile | Percentile of slope-break elevation-gain values used as the reach's flood threshold; higher values flood wider. |

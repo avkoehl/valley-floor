@@ -5,6 +5,7 @@ import xarray as xr
 import geopandas as gpd
 
 from vhs.utils.cross_sections import sample_cross_sections
+from vhs.utils.raster import calculate_slope
 from vhs.utils.routing import route_points_to_reach, flood_from_reaches
 from vhs.config import Parameters
 
@@ -16,8 +17,11 @@ def flood_reaches(
     params: Parameters,
 ) -> tuple[xr.DataArray, gpd.GeoDataFrame, dict]:
     xs_coords = sample_cross_sections(channel_network, dem, params)
+    slope_raster = calculate_slope(dem, smooth_window=params.flood_slope_window).values
     slope_break_pts = _detect_slope_breaks(
         xs_coords,
+        dem,
+        slope_raster,
         params.flood_steep_slope,
         params.flood_min_elevation_gain,
     )
@@ -36,12 +40,20 @@ def flood_reaches(
 
 def _detect_slope_breaks(
     xs_coords: gpd.GeoDataFrame,
+    dem: xr.DataArray,
+    slope_raster: np.ndarray,
     steep_slope: float,
     min_elevation_gain: float,
 ) -> gpd.GeoDataFrame:
     """For every cross section, walk outward from the channel on each side
     looking for the first steep run (see `_find_slope_breaks_numba`) and
     return its point as that side's slope-break.
+
+    Steepness is the DEM's own local slope (`slope_raster`, from
+    `calculate_slope`) sampled at each cross-section point - direction-
+    independent, unlike a naive elevation difference measured along the
+    cross-section's own line, which underreads the true slope whenever that
+    line isn't perpendicular to the wall.
 
     All cross sections are processed in one pass: rather than looping per
     `xs_id` in Python, every side of every cross section is sorted into one
@@ -57,8 +69,6 @@ def _detect_slope_breaks(
     if xs_coords.empty:
         return empty
 
-    min_slope_ratio = np.tan(np.radians(steep_slope))
-
     # The center point (distance == 0) belongs to both the left (<= 0) and
     # right (>= 0) walk, so it's duplicated into both halves below - matching
     # the original per-xs_id code, which ran the same two overlapping masks.
@@ -70,6 +80,11 @@ def _detect_slope_breaks(
     elevation = xs_coords["interp_elevation"].to_numpy()
     point_id = xs_coords["point_id"].to_numpy()
 
+    rows, cols = rowcol(dem.rio.transform(), xs_coords.geometry.x.values, xs_coords.geometry.y.values)
+    rows = np.clip(np.asarray(rows), 0, slope_raster.shape[0] - 1)
+    cols = np.clip(np.asarray(cols), 0, slope_raster.shape[1] - 1)
+    point_slope = slope_raster[rows, cols]
+
     half_side = np.concatenate(
         [np.zeros(left_mask.sum(), dtype=np.int64), np.ones(right_mask.sum(), dtype=np.int64)]
     )
@@ -78,16 +93,17 @@ def _detect_slope_breaks(
     h_abs_dist = np.concatenate([-distance[left_mask], distance[right_mask]])
     h_elevation = np.concatenate([elevation[left_mask], elevation[right_mask]])
     h_point_id = np.concatenate([point_id[left_mask], point_id[right_mask]])
+    h_true_slope = np.concatenate([point_slope[left_mask], point_slope[right_mask]])
 
     # sort by (xs_id, half_side, abs_dist) so each (xs_id, side) group is
     # contiguous and ordered outward from the channel
     order = np.lexsort((h_abs_dist, half_side, h_xs_id))
     h_xs_id = h_xs_id[order]
     half_side = half_side[order]
-    h_abs_dist = h_abs_dist[order]
     h_distance = h_distance[order]
     h_elevation = h_elevation[order]
     h_point_id = h_point_id[order]
+    h_true_slope = h_true_slope[order]
 
     group_key = h_xs_id.astype(np.int64) * 2 + half_side
     group_start = np.flatnonzero(
@@ -96,13 +112,13 @@ def _detect_slope_breaks(
     group_end = np.r_[group_start[1:], len(group_key)].astype(np.int64)
 
     found_point_id = _find_slope_breaks_numba(
-        h_abs_dist.astype(np.float64),
+        h_true_slope.astype(np.float64),
         h_elevation.astype(np.float64),
         h_distance.astype(np.float64),
         h_point_id.astype(np.int64),
         group_start,
         group_end,
-        float(min_slope_ratio),
+        float(steep_slope),
         float(min_elevation_gain),
     )
 
@@ -131,20 +147,25 @@ def _detect_slope_breaks(
 
 @numba.njit(cache=True)
 def _find_slope_breaks_numba(
-    abs_dist, elevation, distance, point_id, group_start, group_end,
-    min_slope_ratio, min_elevation_gain,
+    true_slope, elevation, distance, point_id, group_start, group_end,
+    min_slope_deg, min_elevation_gain,
 ):
-    """For each (xs_id, side) group - contiguous, sorted by `abs_dist`
-    ascending - find the first run of consecutive steep segments (slope >=
-    `min_slope_ratio`) whose flagged span gains more than
+    """For each (xs_id, side) group - contiguous, sorted by distance from
+    the channel ascending - find the first run of consecutive steep
+    segments (DEM slope at the segment's start point >= `min_slope_deg`,
+    and rising outward) whose flagged span gains more than
     `min_elevation_gain`, and return the point_id of that run's break point
     (-1 if none found).
 
-    A segment i -> i+1 is "steep" if its slope exceeds the threshold; a run
-    is a maximal contiguous block of steep-flagged segments. The run's gain
-    is measured between its first and last *flagged* point - i.e. it does
-    not include the endpoint of the run's final segment, only where that
-    segment starts. This mirrors the original pandas implementation's
+    A segment i -> i+1 is "steep" if the DEM's own local slope at point i
+    meets the threshold and elevation increases outward across it - using
+    the DEM's slope directly (rather than rise-over-run measured along the
+    cross-section's own, possibly oblique, line) avoids underreading the
+    true steepness whenever the cross-section isn't perpendicular to the
+    wall. A run is a maximal contiguous block of steep-flagged segments.
+    The run's gain is measured between its first and last *flagged* point -
+    i.e. it does not include the endpoint of the run's final segment, only
+    where that segment starts. This mirrors the original implementation's
     `group.iloc[-1] - group.iloc[0]` over rows where `is_steep` is True,
     preserved here rather than "corrected" since it's existing, validated
     behavior.
@@ -166,13 +187,8 @@ def _find_slope_breaks_numba(
         run_start = -1
         for i in range(n - 1):
             idx = start + i
-            dx = abs_dist[idx + 1] - abs_dist[idx]
-            dz = elevation[idx + 1] - elevation[idx]
-            if dx == 0.0 and dz == 0.0:
-                slope = 0.0
-            else:
-                slope = dz / dx
-            is_steep = slope >= min_slope_ratio
+            rising = elevation[idx + 1] >= elevation[idx]
+            is_steep = rising and (true_slope[idx] >= min_slope_deg)
 
             if is_steep:
                 if run_start == -1:
