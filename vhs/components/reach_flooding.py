@@ -1,4 +1,5 @@
 from rasterio.transform import rowcol
+import numba
 import numpy as np
 import xarray as xr
 import geopandas as gpd
@@ -38,30 +39,165 @@ def _detect_slope_breaks(
     steep_slope: float,
     min_elevation_gain: float,
 ) -> gpd.GeoDataFrame:
-    point_id_index = xs_coords.set_index("point_id")
-    results = []
-    for xs_id, xs in xs_coords.groupby("xs_id"):
-        breaks = _find_slope_breaks(xs, steep_slope, min_elevation_gain)
-        for side in ["left", "right"]:
-            found_id = breaks[side]
-            if found_id is not None:
-                row = point_id_index.loc[found_id]
-                results.append(
-                    {
-                        "xs_id": xs_id,
-                        "side": side,
-                        "geometry": row.geometry,
-                        "elevation": row.interp_elevation,
-                        "reach_id": int(row.linestring_id),
-                    }
-                )
-    if results:
-        return gpd.GeoDataFrame(results, geometry="geometry", crs=xs_coords.crs)
-    return gpd.GeoDataFrame(
+    """For every cross section, walk outward from the channel on each side
+    looking for the first steep run (see `_find_slope_breaks_numba`) and
+    return its point as that side's slope-break.
+
+    All cross sections are processed in one pass: rather than looping per
+    `xs_id` in Python, every side of every cross section is sorted into one
+    flat array (grouped by (xs_id, side), ordered by distance from the
+    channel) and handed to a numba kernel that scans each group's run in a
+    single pass.
+    """
+    empty = gpd.GeoDataFrame(
         columns=["xs_id", "side", "geometry", "elevation", "reach_id"],
         geometry="geometry",
         crs=xs_coords.crs,
     )
+    if xs_coords.empty:
+        return empty
+
+    min_slope_ratio = np.tan(np.radians(steep_slope))
+
+    # The center point (distance == 0) belongs to both the left (<= 0) and
+    # right (>= 0) walk, so it's duplicated into both halves below - matching
+    # the original per-xs_id code, which ran the same two overlapping masks.
+    left_mask = (xs_coords["distance"] <= 0).to_numpy()
+    right_mask = (xs_coords["distance"] >= 0).to_numpy()
+
+    xs_id = xs_coords["xs_id"].to_numpy()
+    distance = xs_coords["distance"].to_numpy()
+    elevation = xs_coords["interp_elevation"].to_numpy()
+    point_id = xs_coords["point_id"].to_numpy()
+
+    half_side = np.concatenate(
+        [np.zeros(left_mask.sum(), dtype=np.int64), np.ones(right_mask.sum(), dtype=np.int64)]
+    )
+    h_xs_id = np.concatenate([xs_id[left_mask], xs_id[right_mask]])
+    h_distance = np.concatenate([distance[left_mask], distance[right_mask]])
+    h_abs_dist = np.concatenate([-distance[left_mask], distance[right_mask]])
+    h_elevation = np.concatenate([elevation[left_mask], elevation[right_mask]])
+    h_point_id = np.concatenate([point_id[left_mask], point_id[right_mask]])
+
+    # sort by (xs_id, half_side, abs_dist) so each (xs_id, side) group is
+    # contiguous and ordered outward from the channel
+    order = np.lexsort((h_abs_dist, half_side, h_xs_id))
+    h_xs_id = h_xs_id[order]
+    half_side = half_side[order]
+    h_abs_dist = h_abs_dist[order]
+    h_distance = h_distance[order]
+    h_elevation = h_elevation[order]
+    h_point_id = h_point_id[order]
+
+    group_key = h_xs_id.astype(np.int64) * 2 + half_side
+    group_start = np.flatnonzero(
+        np.r_[True, group_key[1:] != group_key[:-1]]
+    ).astype(np.int64)
+    group_end = np.r_[group_start[1:], len(group_key)].astype(np.int64)
+
+    found_point_id = _find_slope_breaks_numba(
+        h_abs_dist.astype(np.float64),
+        h_elevation.astype(np.float64),
+        h_distance.astype(np.float64),
+        h_point_id.astype(np.int64),
+        group_start,
+        group_end,
+        float(min_slope_ratio),
+        float(min_elevation_gain),
+    )
+
+    valid = found_point_id >= 0
+    if not np.any(valid):
+        return empty
+
+    result_xs_id = h_xs_id[group_start][valid]
+    result_side = np.where(half_side[group_start][valid] == 0, "left", "right")
+    result_point_id = found_point_id[valid]
+
+    point_lookup = xs_coords.set_index("point_id")
+    rows = point_lookup.loc[result_point_id]
+    return gpd.GeoDataFrame(
+        {
+            "xs_id": result_xs_id,
+            "side": result_side,
+            "geometry": rows["geometry"].to_numpy(),
+            "elevation": rows["interp_elevation"].to_numpy(),
+            "reach_id": rows["linestring_id"].to_numpy().astype(int),
+        },
+        geometry="geometry",
+        crs=xs_coords.crs,
+    )
+
+
+@numba.njit(cache=True)
+def _find_slope_breaks_numba(
+    abs_dist, elevation, distance, point_id, group_start, group_end,
+    min_slope_ratio, min_elevation_gain,
+):
+    """For each (xs_id, side) group - contiguous, sorted by `abs_dist`
+    ascending - find the first run of consecutive steep segments (slope >=
+    `min_slope_ratio`) whose flagged span gains more than
+    `min_elevation_gain`, and return the point_id of that run's break point
+    (-1 if none found).
+
+    A segment i -> i+1 is "steep" if its slope exceeds the threshold; a run
+    is a maximal contiguous block of steep-flagged segments. The run's gain
+    is measured between its first and last *flagged* point - i.e. it does
+    not include the endpoint of the run's final segment, only where that
+    segment starts. This mirrors the original pandas implementation's
+    `group.iloc[-1] - group.iloc[0]` over rows where `is_steep` is True,
+    preserved here rather than "corrected" since it's existing, validated
+    behavior.
+
+    If the run starts exactly at the channel (`distance == 0`, i.e. the
+    center point), its own point is skipped in favor of the run's second
+    point, same as the original - a break can't be "at" the channel itself.
+    """
+    n_groups = len(group_start)
+    found = np.full(n_groups, -1, dtype=np.int64)
+
+    for g in range(n_groups):
+        start = group_start[g]
+        end = group_end[g]
+        n = end - start
+        if n < 2:
+            continue
+
+        run_start = -1
+        for i in range(n - 1):
+            idx = start + i
+            dx = abs_dist[idx + 1] - abs_dist[idx]
+            dz = elevation[idx + 1] - elevation[idx]
+            if dx == 0.0 and dz == 0.0:
+                slope = 0.0
+            else:
+                slope = dz / dx
+            is_steep = slope >= min_slope_ratio
+
+            if is_steep:
+                if run_start == -1:
+                    run_start = i
+            elif run_start != -1:
+                last_flagged = i - 1
+                gain = elevation[start + last_flagged] - elevation[start + run_start]
+                if gain > min_elevation_gain:
+                    if distance[start + run_start] == 0.0 and last_flagged > run_start:
+                        found[g] = point_id[start + run_start + 1]
+                    else:
+                        found[g] = point_id[start + run_start]
+                    break
+                run_start = -1
+
+        if found[g] == -1 and run_start != -1:
+            last_flagged = n - 2
+            gain = elevation[start + last_flagged] - elevation[start + run_start]
+            if gain > min_elevation_gain:
+                if distance[start + run_start] == 0.0 and last_flagged > run_start:
+                    found[g] = point_id[start + run_start + 1]
+                else:
+                    found[g] = point_id[start + run_start]
+
+    return found
 
 
 def _derive_reach_thresholds(
@@ -130,47 +266,3 @@ def _derive_reach_thresholds(
             reach_thresholds[reach_id] = default_hand
 
     return reach_thresholds, pts
-
-
-def _find_slope_breaks(
-    gdf: gpd.GeoDataFrame,
-    min_slope_degrees: float,
-    min_elevation_gain: float,
-) -> dict:
-    min_slope_ratio = np.tan(np.radians(min_slope_degrees))
-    results = {}
-    for side_name, mask in [
-        ("left", gdf["distance"] <= 0),
-        ("right", gdf["distance"] >= 0),
-    ]:
-        df = gdf[mask].copy()
-        if df.empty:
-            results[side_name] = None
-            continue
-        df["abs_dist"] = df["distance"].abs()
-        df = df.sort_values("abs_dist").reset_index(drop=True)
-
-        delta_z = df["interp_elevation"].diff().shift(-1)
-        delta_x = df["abs_dist"].diff().shift(-1)
-        slopes = (delta_z / delta_x).fillna(0)
-        is_steep = slopes >= min_slope_ratio
-        segment_ids = (is_steep != is_steep.shift()).cumsum()
-
-        found_point = None
-        for seg_id, group in df[is_steep].groupby(segment_ids[is_steep]):
-            gain = (
-                group["interp_elevation"].iloc[-1] - group["interp_elevation"].iloc[0]
-            )
-            if gain > min_elevation_gain:
-                if group.iloc[0]["distance"] == 0:
-                    found_point = (
-                        group.iloc[1]["point_id"]
-                        if len(group) > 1
-                        else group.iloc[0]["point_id"]
-                    )
-                else:
-                    found_point = group.iloc[0]["point_id"]
-                break
-        results[side_name] = found_point
-
-    return results

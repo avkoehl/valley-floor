@@ -3,8 +3,8 @@ from typing import Optional, Sequence
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import shapely
 import xarray as xr
-from shapely.geometry import LineString
 from shapelysmooth import chaikin_smooth, taubin_smooth
 
 from vhs.config import Parameters
@@ -73,42 +73,60 @@ def _cross_sections_to_points(
     if "xs_id" not in xs_linestrings.columns:
         xs_linestrings["xs_id"] = np.arange(1, len(xs_linestrings) + 1)
 
-    xs_points = []
-    for xs_id, xs_linestring in xs_linestrings.groupby("xs_id"):
-        for _, linestring in xs_linestring.iterrows():
-            points = _points_along_linestring(
-                linestring.geometry, point_interval, crs=xs_linestrings.crs
-            )
-            points["xs_id"] = xs_id
-            for col in xs_linestring.columns:
-                if col != "geometry":
-                    points[col] = linestring[col]
-            xs_points.append(points)
+    geoms = xs_linestrings.geometry.to_numpy()
+    lengths = shapely.length(geoms)
 
-    return gpd.GeoDataFrame(
-        pd.concat(xs_points), crs=xs_linestrings.crs, geometry="geometry"
-    ).reset_index(drop=True)
+    # Each line's own (float-jittered) length determines its own distance
+    # grid - as in the original per-line derivation - so this can't be
+    # collapsed onto one shared grid without risking an off-by-one point at
+    # the ends when two "identical" lines differ by a ULP or two. The grid
+    # math itself is cheap numpy, so it stays a plain loop; only the
+    # expensive part (interpolating points on the geometry) is batched into
+    # one vectorized shapely call below.
+    line_index_chunks = []
+    distance_chunks = []
+    side_chunks = []
+    for i, length in enumerate(lengths):
+        distances, sides = _cross_section_distance_grid(length, point_interval)
+        line_index_chunks.append(np.full(len(distances), i))
+        distance_chunks.append(distances)
+        side_chunks.append(sides)
+
+    line_index = np.concatenate(line_index_chunks) if line_index_chunks else np.empty(0, dtype=int)
+    all_distances = np.concatenate(distance_chunks) if distance_chunks else np.empty(0)
+    all_sides = np.concatenate(side_chunks) if side_chunks else np.empty(0, dtype=object)
+    rel_distances = all_distances - lengths[line_index] / 2
+
+    points = shapely.line_interpolate_point(geoms[line_index], all_distances)
+    xy = shapely.get_coordinates(points)
+
+    other_cols = [c for c in xs_linestrings.columns if c != "geometry"]
+    data = {
+        "side": all_sides,
+        "geometry": gpd.points_from_xy(xy[:, 0], xy[:, 1]) if len(xy) else [],
+        "distance": rel_distances,
+    }
+    for c in other_cols:
+        data[c] = xs_linestrings[c].to_numpy()[line_index]
+
+    xs_points = pd.DataFrame(data)
+    return gpd.GeoDataFrame(xs_points, crs=xs_linestrings.crs, geometry="geometry")
 
 
-def _points_along_linestring(linestring, interval, crs=None) -> gpd.GeoDataFrame:
-    center = linestring.length / 2
-    pos_dists = np.arange(center + interval, linestring.length + interval, interval)
+def _cross_section_distance_grid(length, interval):
+    """Distances (and their side labels) at which a cross section of this
+    `length` is sampled, matching the original per-line derivation: a center
+    point plus points spaced `interval` apart out to each end."""
+    center = length / 2
+    pos_dists = np.arange(center + interval, length + interval, interval)
     neg_dists = np.arange(center - interval, -interval, -interval)
     distances = np.concatenate([[center], pos_dists, neg_dists])
-    sides = ["center"] + ["positive"] * len(pos_dists) + ["negative"] * len(neg_dists)
-
-    valid_mask = (distances >= 0) & (distances <= linestring.length)
-    points = [linestring.interpolate(d) for d in distances[valid_mask]]
-    distances = distances[valid_mask] - center
-
-    return gpd.GeoDataFrame(
-        {
-            "side": [s for s, v in zip(sides, valid_mask) if v],
-            "geometry": points,
-            "distance": distances,
-        },
-        crs=crs,
+    sides = np.array(
+        ["center"] + ["positive"] * len(pos_dists) + ["negative"] * len(neg_dists)
     )
+
+    valid_mask = (distances >= 0) & (distances <= length)
+    return distances[valid_mask], sides[valid_mask]
 
 
 def _create_xs_for_linestring(
@@ -118,9 +136,7 @@ def _create_xs_for_linestring(
         angles, points = _perpendicular_angles_smoothed(linestring, interval_distance)
     else:
         angles, points = _perpendicular_angles(linestring, interval_distance)
-    lines = [
-        _xs_linestring(point, angle, width) for point, angle in zip(points, angles)
-    ]
+    lines = _xs_linestrings(points, angles, width)
     series = gpd.GeoSeries(lines)
     if crs:
         series.crs = crs
@@ -130,46 +146,64 @@ def _create_xs_for_linestring(
 def _perpendicular_angles(linestring, interval_distance):
     distances = np.arange(0, linestring.length + interval_distance, interval_distance)
     distances = distances[distances <= linestring.length]
-    angles, points = [], []
-    for dist in distances:
-        point = linestring.interpolate(dist)
-        left, right = _points_on_either_side(linestring, dist)
-        angle = np.arctan2(right.y - left.y, right.x - left.x) + np.pi / 2
-        angles.append(angle)
-        points.append(point)
+    if len(distances) == 0:
+        return np.empty(0, dtype=float), np.empty(0, dtype=object)
+
+    delta = 1.0
+    left_dist = np.where(distances - delta >= 0, distances - delta, 0.0)
+    right_dist = np.where(
+        distances + delta <= linestring.length, distances + delta, linestring.length
+    )
+
+    points = shapely.line_interpolate_point(linestring, distances)
+    left_xy = shapely.get_coordinates(shapely.line_interpolate_point(linestring, left_dist))
+    right_xy = shapely.get_coordinates(shapely.line_interpolate_point(linestring, right_dist))
+
+    angles = (
+        np.arctan2(right_xy[:, 1] - left_xy[:, 1], right_xy[:, 0] - left_xy[:, 0])
+        + np.pi / 2
+    )
     return angles, points
 
 
 def _perpendicular_angles_smoothed(linestring, interval_distance):
     smoothed = chaikin_smooth(taubin_smooth(linestring))
     angles, points = _perpendicular_angles(smoothed, interval_distance)
-    new_points, new_angles = [], []
-    for point, angle in zip(points, angles):
-        line = _xs_linestring(point, angle, width=200)
-        intersection = linestring.intersection(line)
-        if intersection.geom_type == "Point":
-            new_points.append(intersection)
-            new_angles.append(angle)
-        elif intersection.geom_type == "MultiPoint":
-            geoms = list(intersection.geoms)
-            closest = min(geoms, key=lambda p: point.distance(p))
-            new_points.append(closest)
-            new_angles.append(angle)
-        else:
-            new_points.append(linestring.interpolate(linestring.project(point)))
-            new_angles.append(angle)
-    return new_angles, new_points
+    if len(points) == 0:
+        return angles, points
+
+    # `angles` is returned unchanged below in every branch of the original
+    # per-point logic; only the sampled `points` themselves get snapped onto
+    # the (unsmoothed) `linestring`.
+    candidate_lines = _xs_linestrings(points, angles, width=200)
+    intersections = shapely.intersection(candidate_lines, linestring)
+    type_ids = shapely.get_type_id(intersections)
+
+    new_points = np.array(points, dtype=object)
+
+    is_point = type_ids == shapely.GeometryType.POINT
+    new_points[is_point] = intersections[is_point]
+
+    is_multi = type_ids == shapely.GeometryType.MULTIPOINT
+    for i in np.flatnonzero(is_multi):
+        geoms = list(intersections[i].geoms)
+        new_points[i] = min(geoms, key=lambda p: points[i].distance(p))
+
+    other = ~is_point & ~is_multi
+    if np.any(other):
+        proj = shapely.line_locate_point(linestring, np.array(points, dtype=object)[other])
+        new_points[other] = shapely.line_interpolate_point(linestring, proj)
+
+    return angles, new_points
 
 
-def _points_on_either_side(linestring, distance, delta=1):
-    left_delta = delta if distance - delta >= 0 else 0
-    right_delta = delta if distance + delta <= linestring.length else linestring.length
-    return linestring.interpolate(distance - left_delta), linestring.interpolate(
-        distance + right_delta
-    )
-
-
-def _xs_linestring(point, angle, width) -> LineString:
-    dx = width / 2 * np.cos(angle)
-    dy = width / 2 * np.sin(angle)
-    return LineString([(point.x - dx, point.y - dy), (point.x + dx, point.y + dy)])
+def _xs_linestrings(points, angles, width) -> np.ndarray:
+    points = np.asarray(points, dtype=object)
+    angles = np.asarray(angles, dtype=float)
+    xy = shapely.get_coordinates(points)
+    dx = width / 2 * np.cos(angles)
+    dy = width / 2 * np.sin(angles)
+    starts = xy - np.column_stack([dx, dy])
+    ends = xy + np.column_stack([dx, dy])
+    coords = np.stack([starts, ends], axis=1)
+    return shapely.linestrings(coords)
