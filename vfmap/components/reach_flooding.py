@@ -4,10 +4,10 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from vhs.utils.cross_sections import sample_cross_sections
-from vhs.utils.raster import calculate_slope
-from vhs.utils.routing import route_points_to_reach, flood_from_reaches
-from vhs.config import Parameters
+from vfmap.utils.cross_sections import sample_cross_sections
+from vfmap.utils.raster import calculate_slope
+from vfmap.utils.routing import route_points_to_reach, flood_from_reaches
+from vfmap.config import Parameters
 
 
 def flood_reaches(

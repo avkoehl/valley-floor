@@ -2,9 +2,9 @@ import numpy as np
 import xarray as xr
 from skimage.morphology import remove_small_holes
 
-from vhs.config import Parameters
-from vhs.utils import remove_isolated_areas
-from vhs.utils import calculate_slope
+from vfmap.config import Parameters
+from vfmap.utils import remove_isolated_areas
+from vfmap.utils import calculate_slope
 
 
 def postprocess(

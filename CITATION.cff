@@ -1,18 +1,18 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata from this file."
 type: software
-title: "vhs"
-abstract: "vhs (valley hillslope separator) delineates valley floors from a hydrologically conditioned DEM and a reach-labeled channel network. It combines slope-based region growing, which captures wide unconfined valley floors, with reach-specific flood-fill thresholds derived from cross-section analysis, which captures narrow confined valley floors."
+title: "vfmap"
+abstract: "vfmap delineates valley floors from a hydrologically conditioned DEM and a reach-labeled channel network. It combines slope-based region growing, which captures wide unconfined valley floors, with reach-specific flood-fill thresholds derived from cross-section analysis, which captures narrow confined valley floors."
 authors:
   - family-names: "Koehl"
     given-names: "Arthur"
     email: "avkoehl@ucdavis.edu"
     affiliation: "University of California, Davis"
-repository-code: "https://github.com/avkoehl/vhs"
-url: "https://github.com/avkoehl/vhs"
+repository-code: "https://github.com/avkoehl/vfmap"
+url: "https://github.com/avkoehl/vfmap"
 license: "MIT"
-version: "1.1.0"
-date-released: "2026-07-29"
+version: "1.3.0"
+date-released: "2026-08-02"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.21685156"

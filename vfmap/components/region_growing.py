@@ -2,8 +2,8 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import xarray as xr
 
-from vhs.utils import remove_isolated_areas
-from vhs.utils import calculate_slope
+from vfmap.utils import remove_isolated_areas
+from vfmap.utils import calculate_slope
 
 
 def grow_region(

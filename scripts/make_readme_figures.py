@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource, ListedColormap
 from scipy.ndimage import maximum_filter
 
-import vhs
+import vfmap
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 
@@ -97,7 +97,7 @@ def graphical_abstract(data, out_path):
     ax.axis("off")
     ax.annotate("", xy=(0.9, 0.5), xytext=(0.1, 0.5),
                 arrowprops=dict(arrowstyle="-|>", lw=2.5, color="#333333"))
-    ax.text(0.5, 0.62, "vhs", ha="center", fontsize=11, style="italic")
+    ax.text(0.5, 0.62, "vfmap", ha="center", fontsize=11, style="italic")
 
     # Valley floor over hillshade
     ax = fig.add_subplot(gs[0, 3])
@@ -115,7 +115,7 @@ def graphical_abstract(data, out_path):
 
 def main():
     ASSETS.mkdir(exist_ok=True)
-    data = vhs.load_sample()
+    data = vfmap.load_sample()
     graphical_abstract(data, ASSETS / "graphical_abstract.png")
 
 

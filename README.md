@@ -1,14 +1,14 @@
-# vhs 
+# vfmap
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21685156.svg)](https://doi.org/10.5281/zenodo.21685156)
 
-vhs (valley hillslope separator) is a Python package for delineating valley floors from digital elevation models (DEMs).
+vfmap is a Python package for delineating valley floors from digital elevation models (DEMs).
 
-![Valley floor delineation from a conditioned DEM and a labeled channel network](https://raw.githubusercontent.com/avkoehl/vhs/main/assets/graphical_abstract.png)
+![Valley floor delineation from a conditioned DEM and a labeled channel network](https://raw.githubusercontent.com/avkoehl/vfmap/main/assets/graphical_abstract.png)
 
 Valley floors are the topographic region between valley walls shaped mainly by fluvial
 processes, composed of floodplains, terraces, alluvial fans, and channels. From a
-hydrologically conditioned DEM and a reach-labeled channel network, `vhs` produces a
+hydrologically conditioned DEM and a reach-labeled channel network, `vfmap` produces a
 binary valley floor raster. 
 
 The method combines two components:
@@ -22,11 +22,8 @@ The method combines two components:
 ## Installation
 
 ```bash
-pip install valleyfloor
+pip install vfmap
 ```
-
-> **Note:** `valleyfloor` is the PyPI distribution name; the import package name is `vhs`,
-> i.e. `import vhs`.
 
 ## Usage
 
@@ -36,7 +33,7 @@ are computed from it internally,  `channel_network` (a reach-labeled raster)
 must align with the hydro conditioned dem.
 
 ```python
-from vhs import map_valley_floor, Parameters
+from vfmap import map_valley_floor, Parameters
 
 valley_floor = map_valley_floor(
     dem=dem,
@@ -48,7 +45,7 @@ valley_floor = map_valley_floor(
 ### Parameters
 
 ```python
-from vhs import Parameters
+from vfmap import Parameters
 
 params = Parameters(
     region_slope_threshold=2.0,   # degrees, tighter region growing

@@ -36,8 +36,8 @@ def load_sample() -> dict[str, xr.DataArray]:
 
     - ``dem``             : float32 elevation (m), hydrologically conditioned
     - ``channel_network`` : float64 reach-labeled raster, derived using the same
-      flat tie-break convention as :func:`vhs.utils.routing.compute_flow_directions`
-    - ``valley_floor``    : float32 reference output from :func:`vhs.map_valley_floor`
+      flat tie-break convention as :func:`vfmap.utils.routing.compute_flow_directions`
+    - ``valley_floor``    : float32 reference output from :func:`vfmap.map_valley_floor`
     """
     return {
         name: rioxarray.open_rasterio(sample_data_path(name), masked=True).squeeze()

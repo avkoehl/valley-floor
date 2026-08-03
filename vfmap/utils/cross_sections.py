@@ -7,8 +7,8 @@ import shapely
 import xarray as xr
 from shapelysmooth import chaikin_smooth, taubin_smooth
 
-from vhs.config import Parameters
-from vhs.utils.raster import raster_network_to_vector
+from vfmap.config import Parameters
+from vfmap.utils.raster import raster_network_to_vector
 
 
 # --- public entry point ---

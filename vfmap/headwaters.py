@@ -1,8 +1,8 @@
 import numpy as np
 import xarray as xr
 
-from vhs.utils import raster_network_to_vector
-from vhs.config import Parameters
+from vfmap.utils import raster_network_to_vector
+from vfmap.config import Parameters
 
 
 def _index_pixels_by_id(id_raster: np.ndarray) -> dict:

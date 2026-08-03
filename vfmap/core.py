@@ -5,12 +5,12 @@ import numpy as np
 import xarray as xr
 from loguru import logger
 
-from vhs.config import Parameters, ValleyFloorDetailed
-from vhs.headwaters import filter_headwaters
-from vhs.postprocess import postprocess
-from vhs.components.region_growing import grow_region
-from vhs.components.reach_flooding import flood_reaches
-from vhs.utils.routing import compute_flow_directions
+from vfmap.config import Parameters, ValleyFloorDetailed
+from vfmap.headwaters import filter_headwaters
+from vfmap.postprocess import postprocess
+from vfmap.components.region_growing import grow_region
+from vfmap.components.reach_flooding import flood_reaches
+from vfmap.utils.routing import compute_flow_directions
 
 
 @contextmanager
@@ -52,7 +52,7 @@ def map_valley_floor_detailed(
     growing, reach flooding, headwater reattachment, and postprocessing.
     Emits an INFO-level log line via loguru after each stage with its
     elapsed time - disabled by default (loguru's default level), enable
-    with `logger.enable("vhs")` or by configuring a sink at INFO or below.
+    with `logger.enable("vfmap")` or by configuring a sink at INFO or below.
     """
     if params is None:
         params = Parameters()
